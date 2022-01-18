@@ -19,6 +19,8 @@ namespace UDPLibrary
 
         private CommandManager _commandManager;
 
+        private List<ClientEndPoint> _clients;
+
         public UDPServer(int listenPort)
         {
             _listenPort = listenPort;
@@ -26,6 +28,7 @@ namespace UDPLibrary
             _groupEP = new IPEndPoint(IPAddress.Any, _listenPort);
             _listener = new UdpClient(_listenPort);
             _commandManager = new CommandManager();
+            _clients = new List<ClientEndPoint>();
 
             OnMessageReceived += _commandManager.OnMessageReceived;
 
@@ -62,7 +65,7 @@ namespace UDPLibrary
 
         private void EstablishClientConnection(byte[] message, IPEndPoint source)
         {
-
+            _clients.Add(new ClientEndPoint(source, _listener));
         }
     }
 }
