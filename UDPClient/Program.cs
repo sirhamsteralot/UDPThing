@@ -23,7 +23,7 @@ class Program
             TestPacket packet = new TestPacket();
             packet.thisisavalue = arg;
 
-            udpEndpoint.SendMessage(ep, packet, false);
+            udpEndpoint.SendMessage(ep, packet, true);
 
             Console.WriteLine("Message sent to the broadcast address");
         }

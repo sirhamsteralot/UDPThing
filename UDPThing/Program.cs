@@ -10,8 +10,7 @@ namespace UDPThing
     {
         static void Main(string[] args)
         {
-            UDPEndpoint client = new UDPEndpoint();
-            client.StartListening(11000);
+            UDPEndpoint client = new UDPEndpoint(11000);
             client.OnMessageReceived += OnReceive;
 
             while (true) ;

@@ -8,7 +8,7 @@ namespace UDPLibrary.Packets
 {
     public class TestPacket : INetworkPacket
     {
-        public const uint packetType = 1;
+        public const uint packetType = 2;
         public string thisisavalue = "";
 
         public void Deserialize(byte[] payload, int start, int length)
