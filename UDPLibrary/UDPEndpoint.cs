@@ -6,23 +6,24 @@ using System.Threading.Tasks;
 
 namespace UDPLibrary
 {
-    public class UDPServer
+    public class UDPEndpoint
     {
         public event Action<NetworkPacket, IPEndPoint> OnMessageReceived;
 
         private int _listenPort;
+        private uint _broadCastCount;
 
         private bool _listen = false;
         private UdpClient _listener;
         private IPEndPoint _groupEP;
 
-        private List<ClientEndPoint> _endPoints;
+        private List<RemoteEndPoint> _endPoints;
 
-        public UDPServer()
+        public UDPEndpoint()
         {
             _groupEP = new IPEndPoint(IPAddress.Any, _listenPort);
             _listener = new UdpClient();
-            _endPoints = new List<ClientEndPoint>();
+            _endPoints = new List<RemoteEndPoint>();
         }
 
         public void StartListening(int listenPort)
@@ -34,9 +35,16 @@ namespace UDPLibrary
             Receive();
         }
 
-        public void SendMessage(IPEndPoint endPoint, NetworkPacket packet)
+        public void SendMessage(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
         {
-            _listener.Send(packet.payload, packet.payload.Length, endPoint);
+            NetworkPacket networkPacket = PacketFactory.CreatePacket(packet, _broadCastCount++, reliable);
+
+            _listener.Send(networkPacket.payload, networkPacket.payload.Length, endPoint);
+        }
+
+        public void SendMessage(IPEndPoint endPoint, NetworkPacket networkPacket, bool reliable)
+        {
+            _listener.Send(networkPacket.payload, networkPacket.payload.Length, endPoint);
         }
 
         public void StopReceiving()

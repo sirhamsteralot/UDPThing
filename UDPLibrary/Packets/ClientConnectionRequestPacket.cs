@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UDPLibrary.Events
+namespace UDPLibrary.Packets
 {
-    public class ClientConnectionRequestPacket : ISerializable
+    public class ClientConnectionRequestPacket : INetworkPacket
     {
         public int[] _events;
         public int[] _replicables;
@@ -24,6 +24,11 @@ namespace UDPLibrary.Events
         }
 
         public int GetSize()
+        {
+            throw new NotImplementedException();
+        }
+
+        uint INetworkPacket.GetType()
         {
             throw new NotImplementedException();
         }
