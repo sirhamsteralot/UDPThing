@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using UDPLibrary;
+using UDPLibrary.Events;
 
 namespace UDPThing
 {
@@ -9,16 +10,20 @@ namespace UDPThing
     {
         static void Main(string[] args)
         {
-            UDPServer client = new UDPServer(11000);
+            UDPServer client = new UDPServer();
+            client.StartListening(11000);
             client.OnMessageReceived += OnReceive;
 
             while (true) ;
         }
 
-        static void OnReceive(byte[] bytes, IPEndPoint ep)
+        private static void OnReceive(NetworkPacket arg1, IPEndPoint arg2)
         {
-            Console.WriteLine($"Received broadcast");
-            Console.WriteLine($" {Encoding.ASCII.GetString(bytes, 0, bytes.Length)}");
+            Console.WriteLine("received broadcast");
+            TestPacket packet = new TestPacket();
+            arg1.Deserialize(ref packet);
+
+            Console.WriteLine(packet.thisisavalue);
         }
     }
 }

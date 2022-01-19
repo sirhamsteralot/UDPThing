@@ -3,38 +3,40 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using UDPLibrary.Commands;
 
 namespace UDPLibrary
 {
     public class UDPServer
     {
-        public event Action<byte[], IPEndPoint> OnMessageReceived;
+        public event Action<NetworkPacket, IPEndPoint> OnMessageReceived;
 
-        private readonly int _listenPort;
+        private int _listenPort;
 
-        private bool _listen = true;
+        private bool _listen = false;
         private UdpClient _listener;
         private IPEndPoint _groupEP;
 
-        private CommandManager _commandManager;
+        private List<ClientEndPoint> _endPoints;
 
-        private List<ClientEndPoint> _clients;
+        public UDPServer()
+        {
+            _groupEP = new IPEndPoint(IPAddress.Any, _listenPort);
+            _listener = new UdpClient();
+            _endPoints = new List<ClientEndPoint>();
+        }
 
-        public UDPServer(int listenPort)
+        public void StartListening(int listenPort)
         {
             _listenPort = listenPort;
-
-            _groupEP = new IPEndPoint(IPAddress.Any, _listenPort);
             _listener = new UdpClient(_listenPort);
-            _commandManager = new CommandManager();
-            _clients = new List<ClientEndPoint>();
-
-            OnMessageReceived += _commandManager.OnMessageReceived;
-
-            _commandManager.RegisterCommand(EstablishClientConnection);
+            _listen = true;
 
             Receive();
+        }
+
+        public void SendMessage(IPEndPoint endPoint, NetworkPacket packet)
+        {
+            _listener.Send(packet.payload, packet.payload.Length, endPoint);
         }
 
         public void StopReceiving()
@@ -54,18 +56,15 @@ namespace UDPLibrary
             IPEndPoint? EP = null;
             byte[] bytes = _listener.EndReceive(result, ref EP);
 
+            NetworkPacket packet = new NetworkPacket(bytes);
+
             if (EP != null)
-                OnMessageReceived(bytes, EP);
+                OnMessageReceived(packet, EP);
 
             if (_listen)
             {
                 Receive();
             }
-        }
-
-        private void EstablishClientConnection(byte[] message, IPEndPoint source)
-        {
-            _clients.Add(new ClientEndPoint(source, _listener));
         }
     }
 }

@@ -2,6 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using UDPLibrary;
+using UDPLibrary.Events;
 
 class Program
 {
@@ -10,27 +12,26 @@ class Program
     private static UdpClient udpClient;
     private static IPEndPoint ep;
 
+    private static int counter;
+
     static void Main(string[] args)
     {
-        s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        UDPServer uDPServer = new UDPServer();
         IPAddress server = IPAddress.Parse("127.0.0.1");
         ep = new IPEndPoint(server, 11000);
-        udpClient = new UdpClient();
-
-        Console.WriteLine("Everything ready?");
-        Console.ReadLine();
-
-        byte[] establish = new byte[] { 0, 1};
-        s.SendTo(establish, ep);
 
         while (true)
         {
             Console.WriteLine("input a thing");
 
             string arg = Console.ReadLine();
+            TestPacket packet = new TestPacket();
+            packet.thisisavalue = arg;
 
-            byte[] sendbuf = Encoding.ASCII.GetBytes(arg);
-            udpClient.Send(sendbuf, ep);
+            NetworkPacket networkPacket = new NetworkPacket(1,1, counter++, false);
+            networkPacket.Serialize(packet, packet.GetSize());
+
+            uDPServer.SendMessage(ep, networkPacket);
 
             Console.WriteLine("Message sent to the broadcast address");
         }

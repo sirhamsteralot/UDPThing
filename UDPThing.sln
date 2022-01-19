@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDPThing", "UDPThing\UDPThi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDPClient", "UDPClient\UDPClient.csproj", "{04899457-29EE-4705-B469-CD1ADC48FE8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPLibrary", "UDPLibrary\UDPLibrary.csproj", "{A9B8DFF2-44F8-40E2-A63B-B9FC93DA9BFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDPLibrary", "UDPLibrary\UDPLibrary.csproj", "{A9B8DFF2-44F8-40E2-A63B-B9FC93DA9BFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -10,18 +10,18 @@ namespace UDPLibrary
 {
     public class ClientEndPoint
     {
-        public IPEndPoint endPoint;
+        public IPEndPoint clientEp;
         public UdpClient client;
 
-        public ClientEndPoint(IPEndPoint endPoint, UdpClient client)
+        public ClientEndPoint(IPEndPoint clientEp, UdpClient client, byte[] bytes)
         {
-            this.endPoint = endPoint;
+            this.clientEp = clientEp;
             this.client = client;
         }
 
         public void SendMessage(byte[] message)
         {
-            client.Send(message, message.Length, endPoint);
+            client.Send(message, message.Length, clientEp);
         }
     }
 }
