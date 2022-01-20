@@ -9,8 +9,12 @@ namespace UDPLibrary.Packets
     public class AckPacket : INetworkPacket
     {
         public const uint packetType = 1;
-        private bool ack;
-        private uint ackPackage;
+        public bool ack;
+        public uint ackPackage;
+
+        public AckPacket()
+        {
+        }
 
         public AckPacket(uint ackPackage)
         {
@@ -41,7 +45,7 @@ namespace UDPLibrary.Packets
             }
         }
 
-        uint INetworkPacket.GetType()
+        uint INetworkPacket.GetPacketType()
         {
             return packetType;
         }

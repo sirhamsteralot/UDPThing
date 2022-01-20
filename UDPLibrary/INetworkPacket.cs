@@ -16,6 +16,6 @@ namespace UDPLibrary
         public int GetSize();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint GetType();
+        public uint GetPacketType();
     }
 }

@@ -10,7 +10,7 @@ namespace UDPLibrary
     {
         public uint packetVersion;
         public uint packetType;
-        public uint packetIndex;
+        public uint packetId;
         public bool reliablePacket;
 
         public byte[] payload;
@@ -26,7 +26,7 @@ namespace UDPLibrary
             {
                 packetVersion = *(uint*)pbytes;
                 packetType = *(uint*)(pbytes + 4);
-                packetIndex = *(uint*)(pbytes + 8);
+                packetId = *(uint*)(pbytes + 8);
                 reliablePacket = *(bool*)(pbytes + 12);
             }
 

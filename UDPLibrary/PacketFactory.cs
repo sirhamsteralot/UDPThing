@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using UDPLibrary.Packets;
 
 namespace UDPLibrary
 {
@@ -15,7 +16,7 @@ namespace UDPLibrary
         {
             byte[] payload = new byte[packet.GetSize() + 13];
 
-            uint packetType = packet.GetType();
+            uint packetType = packet.GetPacketType();
 
             fixed (byte* pbytes = &payload[0])
             {
@@ -30,7 +31,7 @@ namespace UDPLibrary
             var networkPacket = new NetworkPacket()
             {
                 packetVersion = networkingVersion,
-                packetIndex = index,
+                packetId = index,
                 packetType = packetType,
                 reliablePacket = reliable,
             };
@@ -38,6 +39,27 @@ namespace UDPLibrary
             networkPacket.payload = payload;
 
             return networkPacket;
+        }
+
+        public static NetworkPacket CreateAckPacket(uint packetToAck, uint broadCastCount)
+        {
+            return CreatePacket(new AckPacket(packetToAck), broadCastCount, false);
+        }
+
+        public static Type? GetPacketType(uint packetType)
+        {
+            switch (packetType)
+            {
+                case 1:
+                    return typeof(AckPacket);
+                case 2:
+                    return typeof(CompositePacket);
+                case 3:
+                    return typeof(TestPacket);
+
+                default:
+                    return null;
+            }
         }
     }
 }

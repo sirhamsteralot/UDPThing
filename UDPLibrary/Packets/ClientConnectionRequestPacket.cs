@@ -28,7 +28,7 @@ namespace UDPLibrary.Packets
             throw new NotImplementedException();
         }
 
-        uint INetworkPacket.GetType()
+        public uint GetPacketType()
         {
             throw new NotImplementedException();
         }

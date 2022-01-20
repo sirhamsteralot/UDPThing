@@ -32,12 +32,6 @@ namespace PerformanceTests
         }
 
         [Benchmark]
-        public void SendOverhead()
-        {
-            udpEndpoint.SendMessage(ep, networkTestPacket, false);
-        }
-
-        [Benchmark]
         public void PacketFactoryBench()
         {
             PacketFactory.CreatePacket(testPacket, 1, false);
@@ -66,7 +60,7 @@ namespace PerformanceTests
             var networkPacket = new NetworkPacket()
             {
                 packetVersion = networkingVersion,
-                packetIndex = index,
+                packetId = index,
                 packetType = packetType,
                 reliablePacket = reliable,
             };

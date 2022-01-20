@@ -15,6 +15,8 @@ class Program
         IPAddress server = IPAddress.Parse("127.0.0.1");
         ep = new IPEndPoint(server, 11000);
 
+        udpEndpoint.OnPacketFailedToSend += UdpEndpoint_OnPacketFailedToSend;
+
         while (true)
         {
             Console.WriteLine("input a thing");
@@ -27,5 +29,10 @@ class Program
 
             Console.WriteLine("Message sent to the broadcast address");
         }
+    }
+
+    private static void UdpEndpoint_OnPacketFailedToSend(NetworkPacket obj)
+    {
+        Console.WriteLine($"packet: {obj.packetId} failed to send!");
     }
 }

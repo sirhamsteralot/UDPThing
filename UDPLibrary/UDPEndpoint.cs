@@ -5,12 +5,14 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using UDPLibrary.Packets;
+using UDPLibrary.RUdp;
 
 namespace UDPLibrary
 {
     public class UDPEndpoint
     {
         public event Action<NetworkPacket, IPEndPoint> OnMessageReceived;
+        public event Action<NetworkPacket> OnPacketFailedToSend;
 
         private int _listenPort;
         private uint _broadCastCount;
@@ -18,28 +20,13 @@ namespace UDPLibrary
         private bool _listen = false;
         private UdpClient _listener;
 
-        private List<RemoteEndPoint> _endPoints;
+        private ReliablePacketTracker _packetTracker;
 
-        private Dictionary<uint, Timer> _awaitingAcknowledgement;
-        private int timeOut;
-
-        public UDPEndpoint()
+        public UDPEndpoint(int listenPort = 0, int maxRetries = 3, int timeout = 2500)
         {
-            _awaitingAcknowledgement = new Dictionary<uint, Timer>();
+            _packetTracker = new ReliablePacketTracker(this, timeout, maxRetries);
 
-            _listener = new UdpClient(0);
-            _endPoints = new List<RemoteEndPoint>();
-
-            var freePort = ((IPEndPoint)_listener.Client.LocalEndPoint).Port;
-            StartListening(freePort);
-        }
-
-        public UDPEndpoint(int listenPort)
-        {
-            _awaitingAcknowledgement = new Dictionary<uint, Timer>();
-
-            _listener = new UdpClient(listenPort);
-            _endPoints = new List<RemoteEndPoint>();
+            _packetTracker.OnPacketFailedToSend += (x) => OnPacketFailedToSend?.Invoke(x);
 
             StartListening(listenPort);
         }
@@ -47,6 +34,11 @@ namespace UDPLibrary
         private void StartListening(int listenPort)
         {
             _listenPort = listenPort;
+            _listener = new UdpClient(listenPort);
+
+            if (_listenPort == 0)
+                _listenPort = ((IPEndPoint)_listener.Client.LocalEndPoint).Port;
+
             _listen = true;
 
             Receive();
@@ -66,7 +58,7 @@ namespace UDPLibrary
             if (!networkPacket.reliablePacket)
                 return;
 
-            _awaitingAcknowledgement[networkPacket.packetIndex] = new Timer((x) => { SendMessage(endPoint, networkPacket); }, null, timeOut, Timeout.Infinite);
+            _packetTracker.TrackPacket(networkPacket, endPoint);
         }
 
         public void StopReceiving()
@@ -88,13 +80,13 @@ namespace UDPLibrary
             NetworkPacket packet = new NetworkPacket(bytes);
 
             if (packet.packetType == AckPacket.packetType)
-                Console.WriteLine("Acked");
+                _packetTracker.OnPacketAcknowledged(packet);
 
             if (EP != null)
             {
                 OnMessageReceived?.Invoke(packet, EP);
                 if (packet.reliablePacket)
-                    AcknowledgeReliablePacket(EP, packet.packetIndex);
+                    AcknowledgeReliablePacket(EP, packet.packetId);
             }
 
             if (_listen)
@@ -105,7 +97,7 @@ namespace UDPLibrary
 
         private void AcknowledgeReliablePacket(IPEndPoint sourceEP, uint packetIndex)
         {
-            var packet = PacketFactory.CreatePacket(new AckPacket(packetIndex), _broadCastCount, false);
+            var packet = PacketFactory.CreateAckPacket(packetIndex, _broadCastCount);
             SendMessage(sourceEP, packet);
         }
     }

@@ -16,14 +16,14 @@ namespace UDPThing
             while (true) ;
         }
 
-        private static void OnReceive(NetworkPacket arg1, IPEndPoint arg2)
+        private static void OnReceive(NetworkPacket incoming, IPEndPoint ep)
         {
             Console.WriteLine("Received broadcast:");
             TestPacket packet = new TestPacket();
-            arg1.Deserialize(ref packet);
+            incoming.Deserialize(ref packet);
 
-            Console.WriteLine($"Packet: V: {arg1.packetVersion} T: {arg1.packetType} I: {arg1.packetIndex} R: {arg1.reliablePacket}");
-            Console.WriteLine($"Full packet: {BitConverter.ToString(arg1.payload)}");
+            Console.WriteLine($"Packet: V: {incoming.packetVersion} T: {incoming.packetType} I: {incoming.packetId} R: {incoming.reliablePacket}");
+            Console.WriteLine($"Full packet: {BitConverter.ToString(incoming.payload)}");
 
             Console.WriteLine(packet.thisisavalue);
         }
