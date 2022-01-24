@@ -56,6 +56,8 @@ namespace UDPLibrary
                     return typeof(CompositePacket);
                 case 3:
                     return typeof(TestPacket);
+                case 4:
+                    return typeof(OpenSessionRequestPacket);
 
                 default:
                     return null;

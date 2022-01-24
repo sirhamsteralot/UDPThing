@@ -17,9 +17,9 @@ namespace UDPLibrary.RUdp
         int _timeOut;
         int _maxRetries;
 
-        UDPEndpoint _udpEndPoint;
+        UDPCore _udpEndPoint;
 
-        public ReliablePacketTracker(UDPEndpoint ep, int timeout, int maxRetries)
+        public ReliablePacketTracker(UDPCore ep, int timeout, int maxRetries)
         {
             _udpEndPoint = ep;
             _packetTrackers = new Dictionary<uint, PacketTracker>();
@@ -63,7 +63,7 @@ namespace UDPLibrary.RUdp
             var tracker = (PacketTracker)state;
 
             if (tracker.retryCount++ < _maxRetries)
-                _udpEndPoint.SendMessage(tracker.ep, tracker.packet);
+                _udpEndPoint.SendMessageAsync(tracker.ep, tracker.packet);
             else
                 OnPacketFailedToSend(tracker.packet);
         }

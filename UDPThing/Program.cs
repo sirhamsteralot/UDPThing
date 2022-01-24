@@ -10,15 +10,20 @@ namespace UDPThing
     {
         static void Main(string[] args)
         {
-            UDPEndpoint client = new UDPEndpoint(11000);
-            client.OnMessageReceived += OnReceive;
+            UDPInterface client = new UDPInterface(11000);
+            client.RawOnMessageReceived += OnReceive;
 
+            Console.WriteLine("Ready.");
             while (true) ;
         }
 
         private static void OnReceive(NetworkPacket incoming, IPEndPoint ep)
         {
+            if (incoming.packetType != TestPacket.PacketType)
+                return;
+
             Console.WriteLine("Received broadcast:");
+
             TestPacket packet = new TestPacket();
             incoming.Deserialize(ref packet);
 

@@ -20,21 +20,21 @@ namespace UDPTests
         [Fact]
         public void CreateServerTest()
         {
-            UDPEndpoint server = new UDPEndpoint(11001);
+            UDPCore server = new UDPCore(11001);
             server.OnMessageReceived += OnReceive;
         }
 
         [Fact]
         public void CreateClientTest()
         {
-            UDPEndpoint client = new UDPEndpoint();
+            UDPCore client = new UDPCore();
             client.OnMessageReceived += OnReceive;
         }
 
         [Fact]
         public void SendMessageTest()
         {
-            UDPEndpoint client = new UDPEndpoint();
+            UDPCore client = new UDPCore();
             client.OnMessageReceived += OnReceive;
 
             IPAddress serverIP = IPAddress.Parse("127.0.0.1");
@@ -43,8 +43,8 @@ namespace UDPTests
             TestPacket packet = new TestPacket();
             packet.thisisavalue = "Hello World";
 
-            client = new UDPEndpoint();
-            client.SendMessage(serverEp, packet, false);
+            client = new UDPCore();
+            client.SendMessageAsync(serverEp, packet, false);
         }
 
         [Fact]

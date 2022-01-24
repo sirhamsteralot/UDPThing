@@ -21,7 +21,7 @@ namespace UDPTests
             var decompiledPacket = new CompositePacket();
             networkPacket.Deserialize(ref decompiledPacket);
 
-            Assert.Equal(1, decompiledPacket.subPackets.Count);
+            Assert.Single(decompiledPacket.subPackets);
 
             Assert.Equal("hello world", ((TestPacket)decompiledPacket.subPackets[0]).thisisavalue);
         }

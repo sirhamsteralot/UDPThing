@@ -9,7 +9,7 @@ using UDPLibrary.RUdp;
 
 namespace UDPLibrary
 {
-    public class UDPEndpoint
+    public class UDPCore
     {
         public event Action<NetworkPacket, IPEndPoint>? OnMessageReceived;
         public event Action<NetworkPacket>? OnPacketFailedToSend;
@@ -21,8 +21,9 @@ namespace UDPLibrary
         private UdpClient _listener;
 
         private ReliablePacketTracker _packetTracker;
+        private PacketBuffering _packetBuffering;
 
-        public UDPEndpoint(int listenPort = 0, int maxRetries = 3, int timeout = 2500)
+        public UDPCore(int listenPort = 0, int maxRetries = 3, int timeout = 2500, int steadyPackageRate = 60)
         {
             _packetTracker = new ReliablePacketTracker(this, timeout, maxRetries);
 
@@ -30,6 +31,9 @@ namespace UDPLibrary
 
             _listenPort = listenPort;
             _listener = new UdpClient(listenPort);
+
+            _packetBuffering = new PacketBuffering(this, steadyPackageRate);
+            _packetBuffering.StartBuffer();
 
             StartListening();
         }
@@ -44,21 +48,28 @@ namespace UDPLibrary
             Receive();
         }
 
-        public void SendMessage(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
+        public void BufferMessage(IPEndPoint endPoint, INetworkPacket packet)
+        {
+            _packetBuffering.QueuePacket(endPoint, packet);
+        }
+
+        public async Task SendMessageAsync(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
         {
             NetworkPacket networkPacket = PacketFactory.CreatePacket(packet, _broadCastCount++, reliable);
 
-            SendMessage(endPoint, networkPacket);
+            await SendMessageAsync(endPoint, networkPacket);
         }
 
-        public void SendMessage(IPEndPoint endPoint, NetworkPacket networkPacket)
+        public async Task SendMessageAsync(IPEndPoint endPoint, NetworkPacket networkPacket)
         {
-            _ = _listener.SendAsync(networkPacket.payload, networkPacket.payload.Length, endPoint);
+            var task = _listener.SendAsync(networkPacket.payload, networkPacket.payload.Length, endPoint);
 
             if (!networkPacket.reliablePacket)
                 return;
 
             _packetTracker.TrackPacket(networkPacket, endPoint);
+
+            await task;
         }
 
         public void StopReceiving()
@@ -98,7 +109,7 @@ namespace UDPLibrary
         private void AcknowledgeReliablePacket(IPEndPoint sourceEP, uint packetIndex)
         {
             var packet = PacketFactory.CreateAckPacket(packetIndex, _broadCastCount);
-            SendMessage(sourceEP, packet);
+            SendMessageAsync(sourceEP, packet);
         }
     }
 }

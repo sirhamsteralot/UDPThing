@@ -16,7 +16,7 @@ namespace PerformanceTests
 
         private NetworkPacket networkTestPacket;
 
-        private UDPEndpoint udpEndpoint;
+        private UDPCore udpEndpoint;
         private IPEndPoint ep;
 
         public UDPBenches()
@@ -26,7 +26,7 @@ namespace PerformanceTests
 
             networkTestPacket = PacketFactory.CreatePacket(testPacket, 1, false);
 
-            udpEndpoint = new UDPEndpoint();
+            udpEndpoint = new UDPCore();
             IPAddress server = IPAddress.Parse("127.0.0.1");
             ep = new IPEndPoint(server, 11000);
         }
@@ -66,6 +66,15 @@ namespace PerformanceTests
             };
 
             networkPacket.payload = payload;
+        }
+
+        [Benchmark]
+        public void SendMessageBench()
+        {
+            TestPacket packet = new TestPacket();
+            packet.thisisavalue = "hello world!";
+
+            udpEndpoint.SendMessageAsync(ep, packet, false);
         }
     }
 }
