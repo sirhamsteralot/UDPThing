@@ -38,7 +38,7 @@ namespace UDPLibrary.Packets
         {
             fixed (byte* ptr = &payload[start])
             {
-                *(int*)ptr = subPacketCount;
+                subPacketCount = *(int*)ptr;
 
                 int currentPos = start + 4 + (2 * (subPacketCount * 4));
 

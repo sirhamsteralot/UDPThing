@@ -7,7 +7,7 @@ namespace UDPTests
     public class PackageTests
     {
         [Fact]
-        public void TestComposite()
+        public void TestCompositeSerialization()
         {
             CompositePacket packet = new CompositePacket();
             TestPacket subPacket = new TestPacket();

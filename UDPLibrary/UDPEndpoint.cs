@@ -11,8 +11,8 @@ namespace UDPLibrary
 {
     public class UDPEndpoint
     {
-        public event Action<NetworkPacket, IPEndPoint> OnMessageReceived;
-        public event Action<NetworkPacket> OnPacketFailedToSend;
+        public event Action<NetworkPacket, IPEndPoint>? OnMessageReceived;
+        public event Action<NetworkPacket>? OnPacketFailedToSend;
 
         private int _listenPort;
         private uint _broadCastCount;
@@ -28,14 +28,14 @@ namespace UDPLibrary
 
             _packetTracker.OnPacketFailedToSend += (x) => OnPacketFailedToSend?.Invoke(x);
 
-            StartListening(listenPort);
-        }
-
-        private void StartListening(int listenPort)
-        {
             _listenPort = listenPort;
             _listener = new UdpClient(listenPort);
 
+            StartListening();
+        }
+
+        private void StartListening()
+        {
             if (_listenPort == 0)
                 _listenPort = ((IPEndPoint)_listener.Client.LocalEndPoint).Port;
 
