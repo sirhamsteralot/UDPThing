@@ -4,9 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using UDPLibrary.Packets;
 
-namespace UDPLibrary
+namespace UDPLibrary.Packets
 {
     public class PacketHelper
     {

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibrary.Packets;
 using System.Security.Cryptography;
+using UDPLibrary.Core;
 
 namespace UDPLibrary
 {

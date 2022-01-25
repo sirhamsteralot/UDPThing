@@ -5,8 +5,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using UDPLibrary.Packets;
 
-namespace UDPLibrary
+namespace UDPLibrary.Services
 {
     public interface INetworkService
     {

@@ -1,6 +1,5 @@
 using Xunit;
 using UDPLibrary.Packets;
-using UDPLibrary;
 
 namespace UDPTests
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UDPLibrary
+namespace UDPLibrary.Packets
 {
     public class NetworkPacket
     {
@@ -19,7 +19,7 @@ namespace UDPLibrary
 
         internal NetworkPacket()
         {
-            
+
         }
 
         public unsafe NetworkPacket(byte[] incoming)
@@ -38,7 +38,7 @@ namespace UDPLibrary
                 headers = new byte[headerLength];
                 Buffer.BlockCopy(incoming, 17, headers, 0, headerLength);
             }
-            
+
 
             payload = incoming;
         }

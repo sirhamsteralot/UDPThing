@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UDPLibrary.Packets;
 
-namespace UDPLibrary
+namespace UDPLibrary.Core
 {
     internal class PacketBuffering
     {
@@ -33,9 +33,9 @@ namespace UDPLibrary
             if (dataRate > 1000)
                 throw new ArgumentOutOfRangeException("dataRate cannot be greater than 1000!");
 
-            _rateTMs = (int)((1.0 / dataRate) * 1000);
+            _rateTMs = (int)(1.0 / dataRate * 1000);
 
-            _bufferedPackets = new ConcurrentDictionary<IPEndPoint,CompositePacket>();
+            _bufferedPackets = new ConcurrentDictionary<IPEndPoint, CompositePacket>();
         }
 
         public void StartBuffer()
@@ -64,13 +64,13 @@ namespace UDPLibrary
         }
 
         private async Task BufferLoop()
-        {   
-            while(_enabled)
+        {
+            while (_enabled)
             {
                 var msToWait = _rateTMs;
                 var watch = Stopwatch.StartNew();
 
-                lock(_bufferedPackets)
+                lock (_bufferedPackets)
                 {
                     if (_bufferedPackets.Count > 0)
                     {

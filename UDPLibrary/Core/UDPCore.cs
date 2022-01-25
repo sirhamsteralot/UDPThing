@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using UDPLibrary.Packets;
 using UDPLibrary.RUdp;
 
-namespace UDPLibrary
+namespace UDPLibrary.Core
 {
     public class UDPCore
     {
@@ -85,7 +85,7 @@ namespace UDPLibrary
             byte[] headers = new byte[4];
             RandomNumberGenerator.Fill(headers);
             var packedPacket = PacketHelper.CreatePacket(outGoingPacket, _broadcastCount, headers, true);
-            
+
             await SendPacketAsync(endpoint, packedPacket);
 
             int idAsByte = BitConverter.ToInt32(headers);
