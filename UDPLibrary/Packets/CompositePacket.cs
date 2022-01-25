@@ -52,7 +52,7 @@ namespace UDPLibrary.Packets
                     uint packetType = *(uint*)(ptr + 4 + (subPacketCount * 4) + (i * 4));
                     subPacketTypes.Add(packetType);
 
-                    var thingToAdd = (INetworkPacket)Activator.CreateInstance(PacketFactory.GetPacketType(packetType));
+                    var thingToAdd = (INetworkPacket)Activator.CreateInstance(PacketHelper.GetPacketType(packetType));
                     if (thingToAdd == null)
                         throw new Exception("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
                     subPackets.Add(thingToAdd);

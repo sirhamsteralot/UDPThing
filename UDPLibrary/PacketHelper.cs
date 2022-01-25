@@ -8,13 +8,20 @@ using UDPLibrary.Packets;
 
 namespace UDPLibrary
 {
-    public class PacketFactory
+    public class PacketHelper
     {
         public readonly static uint networkingVersion = 1;
 
-        public static unsafe NetworkPacket CreatePacket(INetworkPacket packet, uint index, bool reliable)
+        public static NetworkPacket CreatePacket(INetworkPacket packet, uint index, bool reliable)
         {
-            byte[] payload = new byte[packet.GetSize() + 13];
+            return CreatePacket(packet, index, Array.Empty<byte>(), reliable);
+        }
+
+        public static unsafe NetworkPacket CreatePacket(INetworkPacket packet, uint index, byte[] headers, bool reliable)
+        {
+            int headersSize = 17 + headers.Length;
+
+            byte[] payload = new byte[packet.GetSize() + headersSize];
 
             uint packetType = packet.GetPacketType();
 
@@ -24,9 +31,12 @@ namespace UDPLibrary
                 *(uint*)(pbytes + 4) = packetType;
                 *(uint*)(pbytes + 8) = index;
                 *(bool*)(pbytes + 12) = reliable;
+                *(int*)(pbytes + 13) = headers.Length;
             }
 
-            packet.Serialize(payload, 13);
+            Buffer.BlockCopy(headers, 0, payload, headersSize, headers.Length);
+
+            packet.Serialize(payload, headersSize);
 
             var networkPacket = new NetworkPacket()
             {
@@ -34,6 +44,8 @@ namespace UDPLibrary
                 packetId = index,
                 packetType = packetType,
                 reliablePacket = reliable,
+                headerLength = headers.Length,
+                headers = headers
             };
 
             networkPacket.payload = payload;
@@ -58,6 +70,10 @@ namespace UDPLibrary
                     return typeof(TestPacket);
                 case 4:
                     return typeof(OpenSessionRequestPacket);
+                case 5:
+                    return typeof(SessionAcceptedPacket);
+                case 6:
+                    return typeof(PermissionsRequestPacket);
 
                 default:
                     return null;

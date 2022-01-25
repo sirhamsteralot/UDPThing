@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using UDPLibrary.Packets;
@@ -11,11 +13,12 @@ namespace UDPLibrary
 {
     public class UDPCore
     {
-        public event Action<NetworkPacket, IPEndPoint>? OnMessageReceived;
+        public event Action<NetworkPacket, IPEndPoint>? OnPacketReceived;
         public event Action<NetworkPacket>? OnPacketFailedToSend;
 
         private int _listenPort;
-        private uint _broadCastCount;
+        private uint _broadcastCount;
+        private int _timeout;
 
         private bool _listen = false;
         private UdpClient _listener;
@@ -23,9 +26,14 @@ namespace UDPLibrary
         private ReliablePacketTracker _packetTracker;
         private PacketBuffering _packetBuffering;
 
+        private ConcurrentDictionary<int, NetworkPacket> _requestResponses;
+
         public UDPCore(int listenPort = 0, int maxRetries = 3, int timeout = 2500, int steadyPackageRate = 60)
         {
+            _requestResponses = new ConcurrentDictionary<int, NetworkPacket>();
+
             _packetTracker = new ReliablePacketTracker(this, timeout, maxRetries);
+            _timeout = timeout;
 
             _packetTracker.OnPacketFailedToSend += (x) => OnPacketFailedToSend?.Invoke(x);
 
@@ -48,19 +56,19 @@ namespace UDPLibrary
             Receive();
         }
 
-        public void BufferMessage(IPEndPoint endPoint, INetworkPacket packet)
+        public void BufferPacket(IPEndPoint endPoint, INetworkPacket packet)
         {
             _packetBuffering.QueuePacket(endPoint, packet);
         }
 
-        public async Task SendMessageAsync(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
+        public async Task SendPacketAsync(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
         {
-            NetworkPacket networkPacket = PacketFactory.CreatePacket(packet, _broadCastCount++, reliable);
+            NetworkPacket networkPacket = PacketHelper.CreatePacket(packet, _broadcastCount++, reliable);
 
-            await SendMessageAsync(endPoint, networkPacket);
+            await SendPacketAsync(endPoint, networkPacket);
         }
 
-        public async Task SendMessageAsync(IPEndPoint endPoint, NetworkPacket networkPacket)
+        public async Task SendPacketAsync(IPEndPoint endPoint, NetworkPacket networkPacket)
         {
             var task = _listener.SendAsync(networkPacket.payload, networkPacket.payload.Length, endPoint);
 
@@ -70,6 +78,29 @@ namespace UDPLibrary
             _packetTracker.TrackPacket(networkPacket, endPoint);
 
             await task;
+        }
+
+        public async Task<NetworkPacket> RequestResponseAsync(IPEndPoint endpoint, INetworkPacket outGoingPacket, bool reliable)
+        {
+            byte[] headers = new byte[4];
+            RandomNumberGenerator.Fill(headers);
+            var packedPacket = PacketHelper.CreatePacket(outGoingPacket, _broadcastCount, headers, true);
+            
+            await SendPacketAsync(endpoint, packedPacket);
+
+            int idAsByte = BitConverter.ToInt32(headers);
+
+            for (int i = 0; i < _timeout; i += _timeout / 10)
+            {
+                await Task.Delay(_timeout / 100);
+
+                if (_requestResponses.TryGetValue(idAsByte, out var responseByte))
+                {
+                    return responseByte;
+                }
+            }
+
+            return null;
         }
 
         public void StopReceiving()
@@ -83,7 +114,7 @@ namespace UDPLibrary
             _listener.BeginReceive(MyReceiveCallback, null);
         }
 
-        private void MyReceiveCallback(IAsyncResult result)
+        private unsafe void MyReceiveCallback(IAsyncResult result)
         {
             IPEndPoint? EP = null;
             byte[] bytes = _listener.EndReceive(result, ref EP);
@@ -93,9 +124,19 @@ namespace UDPLibrary
             if (packet.packetType == AckPacket.packetType)
                 _packetTracker.OnPacketAcknowledged(packet);
 
+            if (packet.headerLength == 4)
+            {
+                fixed (byte* p = packet.headers)
+                {
+                    int reqId = *(int*)p;
+
+                    _requestResponses[reqId] = packet;
+                }
+            }
+
             if (EP != null)
             {
-                OnMessageReceived?.Invoke(packet, EP);
+                OnPacketReceived?.Invoke(packet, EP);
                 if (packet.reliablePacket)
                     AcknowledgeReliablePacket(EP, packet.packetId);
             }
@@ -108,8 +149,8 @@ namespace UDPLibrary
 
         private void AcknowledgeReliablePacket(IPEndPoint sourceEP, uint packetIndex)
         {
-            var packet = PacketFactory.CreateAckPacket(packetIndex, _broadCastCount);
-            SendMessageAsync(sourceEP, packet);
+            var packet = PacketHelper.CreateAckPacket(packetIndex, _broadcastCount);
+            SendPacketAsync(sourceEP, packet);
         }
     }
 }

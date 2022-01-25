@@ -11,7 +11,7 @@ namespace UDPThing
         static void Main(string[] args)
         {
             UDPInterface client = new UDPInterface(11000);
-            client.RawOnMessageReceived += OnReceive;
+            client.RawOnPacketReceived += OnReceive;
 
             Console.WriteLine("Ready.");
             while (true) ;
@@ -19,16 +19,18 @@ namespace UDPThing
 
         private static void OnReceive(NetworkPacket incoming, IPEndPoint ep)
         {
+            Console.WriteLine("====| Received broadcast: |====");
+
+            Console.WriteLine($"    Packet: V: {incoming.packetVersion} T: {incoming.packetType} I: {incoming.packetId} R: {incoming.reliablePacket}");
+            Console.WriteLine($"    Full packet: {BitConverter.ToString(incoming.payload)}");
+
+            Console.WriteLine("===============================");
+
             if (incoming.packetType != TestPacket.PacketType)
                 return;
 
-            Console.WriteLine("Received broadcast:");
-
             TestPacket packet = new TestPacket();
             incoming.Deserialize(ref packet);
-
-            Console.WriteLine($"Packet: V: {incoming.packetVersion} T: {incoming.packetType} I: {incoming.packetId} R: {incoming.reliablePacket}");
-            Console.WriteLine($"Full packet: {BitConverter.ToString(incoming.payload)}");
 
             Console.WriteLine(packet.thisisavalue);
         }

@@ -9,7 +9,7 @@ class Program
 {
     private static IPEndPoint ep;
 
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         UDPInterface udpEndpoint = new UDPInterface();
         IPAddress server = IPAddress.Parse("127.0.0.1");
@@ -17,7 +17,17 @@ class Program
 
         udpEndpoint.RawOnPacketFailedToSend += UdpEndpoint_OnPacketFailedToSend;
 
-        udpEndpoint.OpenSession(ep);
+        Console.WriteLine("press enter to try open session");
+        Console.ReadLine();
+        Console.WriteLine("opening...");
+
+        var session = await udpEndpoint.OpenSession(ep);
+
+        if (session != null)
+            Console.WriteLine("Session opened!");
+        else
+            Console.WriteLine("Session failed to open!");
+
 
         while (true)
         {
@@ -27,8 +37,7 @@ class Program
             TestPacket packet = new TestPacket();
             packet.thisisavalue = arg;
 
-            //udpEndpoint.SendMessage(ep, packet, true);
-            udpEndpoint.SendImmediateReliable(packet, ep);
+            session.BufferPacket(packet);
 
             Console.WriteLine("Message sent to the broadcast address");
         }

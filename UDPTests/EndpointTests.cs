@@ -21,21 +21,21 @@ namespace UDPTests
         public void CreateServerTest()
         {
             UDPCore server = new UDPCore(11001);
-            server.OnMessageReceived += OnReceive;
+            server.OnPacketReceived += OnReceive;
         }
 
         [Fact]
         public void CreateClientTest()
         {
             UDPCore client = new UDPCore();
-            client.OnMessageReceived += OnReceive;
+            client.OnPacketReceived += OnReceive;
         }
 
         [Fact]
         public void SendMessageTest()
         {
             UDPCore client = new UDPCore();
-            client.OnMessageReceived += OnReceive;
+            client.OnPacketReceived += OnReceive;
 
             IPAddress serverIP = IPAddress.Parse("127.0.0.1");
             IPEndPoint serverEp = new IPEndPoint(serverIP, 11000);
@@ -44,7 +44,7 @@ namespace UDPTests
             packet.thisisavalue = "Hello World";
 
             client = new UDPCore();
-            client.SendMessageAsync(serverEp, packet, false);
+            client.SendPacketAsync(serverEp, packet, false);
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace UDPTests
             IPAddress serverIP = IPAddress.Parse("127.0.0.1");
             IPEndPoint serverEp = new IPEndPoint(serverIP, 11000);
 
-            var networkpacket = PacketFactory.CreatePacket(packet, 0, false);
+            var networkpacket = PacketHelper.CreatePacket(packet, 0, false);
 
             OnReceive(networkpacket, serverEp);
         }

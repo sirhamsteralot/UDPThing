@@ -24,7 +24,7 @@ namespace PerformanceTests
             testPacket = new TestPacket();
             testPacket.thisisavalue = "sdfasdfasfd";
 
-            networkTestPacket = PacketFactory.CreatePacket(testPacket, 1, false);
+            networkTestPacket = PacketHelper.CreatePacket(testPacket, 1, false);
 
             udpEndpoint = new UDPCore();
             IPAddress server = IPAddress.Parse("127.0.0.1");
@@ -34,7 +34,7 @@ namespace PerformanceTests
         [Benchmark]
         public void PacketFactoryBench()
         {
-            PacketFactory.CreatePacket(testPacket, 1, false);
+            PacketHelper.CreatePacket(testPacket, 1, false);
         }
 
         uint networkingVersion = 1;
@@ -74,7 +74,7 @@ namespace PerformanceTests
             TestPacket packet = new TestPacket();
             packet.thisisavalue = "hello world!";
 
-            udpEndpoint.SendMessageAsync(ep, packet, false);
+            udpEndpoint.SendPacketAsync(ep, packet, false);
         }
     }
 }

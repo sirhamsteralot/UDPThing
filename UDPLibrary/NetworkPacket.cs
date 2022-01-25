@@ -12,12 +12,14 @@ namespace UDPLibrary
         public uint packetType;
         public uint packetId;
         public bool reliablePacket;
+        public int headerLength;
+        public byte[] headers;
 
         public byte[] payload;
 
-        public NetworkPacket()
+        internal NetworkPacket()
         {
-
+            
         }
 
         public unsafe NetworkPacket(byte[] incoming)
@@ -28,14 +30,23 @@ namespace UDPLibrary
                 packetType = *(uint*)(pbytes + 4);
                 packetId = *(uint*)(pbytes + 8);
                 reliablePacket = *(bool*)(pbytes + 12);
+                headerLength = *(int*)(pbytes + 13);
             }
+
+            if (headerLength > 0)
+            {
+                headers = new byte[headerLength];
+                Buffer.BlockCopy(incoming, 17, headers, 0, headerLength);
+            }
+            
 
             payload = incoming;
         }
 
         public void Deserialize<T>(ref T output) where T : INetworkPacket
         {
-            output.Deserialize(payload, 13, payload.Length - 13);
+            int totalSize = 17 + headerLength;
+            output.Deserialize(payload, totalSize, payload.Length - totalSize);
         }
     }
 }

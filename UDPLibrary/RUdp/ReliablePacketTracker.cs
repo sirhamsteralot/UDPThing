@@ -54,8 +54,10 @@ namespace UDPLibrary.RUdp
             AckPacket ackPacket = new AckPacket();
             packet.Deserialize(ref ackPacket);
 
-            _packetTrackers[ackPacket.ackPackage].Acknowledged();
-            _packetTrackers.Remove(ackPacket.ackPackage);
+            if(_packetTrackers.TryGetValue(ackPacket.ackPackage, out PacketTracker value)) {
+                value.Acknowledged();
+                _packetTrackers.Remove(ackPacket.ackPackage);
+            }
         }
 
         private void TimerCallback(object? state)
@@ -63,7 +65,7 @@ namespace UDPLibrary.RUdp
             var tracker = (PacketTracker)state;
 
             if (tracker.retryCount++ < _maxRetries)
-                _udpEndPoint.SendMessageAsync(tracker.ep, tracker.packet);
+                _udpEndPoint.SendPacketAsync(tracker.ep, tracker.packet);
             else
                 OnPacketFailedToSend(tracker.packet);
         }

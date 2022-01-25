@@ -76,19 +76,18 @@ namespace UDPLibrary
                     {
                         foreach (var packet in _bufferedPackets)
                         {
-                            _endpoint.SendMessageAsync(packet.Key, packet.Value, false);
+                            _endpoint.SendPacketAsync(packet.Key, packet.Value, false).ContinueWith(x => Console.WriteLine(x.Exception), TaskContinuationOptions.OnlyOnFaulted);
                         }
 
                         _bufferedPackets.Clear();
-
-                        int elapsed = (int)watch.ElapsedMilliseconds;
-                        if (elapsed < _rateTMs)
-                            msToWait = _rateTMs - elapsed;
-                        else
-                            msToWait = 0;
                     }
                 }
 
+                int elapsed = (int)watch.ElapsedMilliseconds;
+                if (elapsed < _rateTMs)
+                    msToWait = _rateTMs - elapsed;
+                else
+                    msToWait = 0;
 
                 await Task.Delay(msToWait);
             }

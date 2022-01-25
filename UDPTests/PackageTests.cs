@@ -14,7 +14,7 @@ namespace UDPTests
             subPacket.thisisavalue = "hello world";
             packet.AddPacket(subPacket);
 
-            var networkPacket = PacketFactory.CreatePacket(packet, 0, false);
+            var networkPacket = PacketHelper.CreatePacket(packet, 0, false);
 
             Assert.Equal(36, networkPacket.payload.Length);
 
