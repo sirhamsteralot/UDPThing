@@ -12,8 +12,7 @@ namespace UDPLibrary.Packets
         public uint packetType;
         public uint packetId;
         public bool reliablePacket;
-        public int headerLength;
-        public byte[] headers;
+        public int eventstreamId;
 
         public byte[] payload;
 
@@ -30,22 +29,15 @@ namespace UDPLibrary.Packets
                 packetType = *(uint*)(pbytes + 4);
                 packetId = *(uint*)(pbytes + 8);
                 reliablePacket = *(bool*)(pbytes + 12);
-                headerLength = *(int*)(pbytes + 13);
+                eventstreamId = *(int*)(pbytes + 13);
             }
-
-            if (headerLength > 0)
-            {
-                headers = new byte[headerLength];
-                Buffer.BlockCopy(incoming, 17, headers, 0, headerLength);
-            }
-
 
             payload = incoming;
         }
 
         public void Deserialize<T>(ref T output) where T : INetworkPacket
         {
-            int totalSize = 17 + headerLength;
+            int totalSize = 17;
             output.Deserialize(payload, totalSize, payload.Length - totalSize);
         }
     }

@@ -11,14 +11,10 @@ namespace UDPLibrary.Packets
     {
         public readonly static uint networkingVersion = 1;
 
-        public static NetworkPacket CreatePacket(INetworkPacket packet, uint index, bool reliable)
-        {
-            return CreatePacket(packet, index, Array.Empty<byte>(), reliable);
-        }
 
-        public static unsafe NetworkPacket CreatePacket(INetworkPacket packet, uint index, byte[] headers, bool reliable)
+        public static unsafe NetworkPacket CreatePacket(INetworkPacket packet, uint index, bool reliable, int eventstreamId = 0)
         {
-            int headersSize = 17 + headers.Length;
+            int headersSize = 17;
 
             byte[] payload = new byte[packet.GetSize() + headersSize];
 
@@ -30,10 +26,8 @@ namespace UDPLibrary.Packets
                 *(uint*)(pbytes + 4) = packetType;
                 *(uint*)(pbytes + 8) = index;
                 *(bool*)(pbytes + 12) = reliable;
-                *(int*)(pbytes + 13) = headers.Length;
+                *(int*)(pbytes + 13) = eventstreamId;
             }
-
-            Buffer.BlockCopy(headers, 0, payload, headersSize, headers.Length);
 
             packet.Serialize(payload, headersSize);
 
@@ -43,8 +37,7 @@ namespace UDPLibrary.Packets
                 packetId = index,
                 packetType = packetType,
                 reliablePacket = reliable,
-                headerLength = headers.Length,
-                headers = headers
+                eventstreamId = eventstreamId,
             };
 
             networkPacket.payload = payload;

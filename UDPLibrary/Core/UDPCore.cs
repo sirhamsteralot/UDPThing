@@ -124,7 +124,7 @@ namespace UDPLibrary.Core
             if (packet.packetType == AckPacket.packetType)
                 _packetTracker.OnPacketAcknowledged(packet);
 
-            if (packet.headerLength == 4)
+            if (packet.eventstreamId == 4)
             {
                 fixed (byte* p = packet.headers)
                 {
