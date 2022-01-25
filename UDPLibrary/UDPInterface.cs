@@ -24,6 +24,8 @@ namespace UDPLibrary
         public event Action<NetworkPacket, IPEndPoint>? RawOnPacketReceived;
         public event Action<NetworkPacket>? RawOnPacketFailedToSend;
 
+        public event Action<UDPSession> OnSessionTimedOut;
+
         private int _timeout;
 
         public UDPInterface(int listenPort = 0, int steadyPackageRate = 60, int maxRetries = 3, int timeout = 2500)
@@ -92,54 +94,63 @@ namespace UDPLibrary
             return services.OfType<T>().FirstOrDefault();
         }
 
-        private async void AcceptSessionRequest(IPEndPoint ip, bool accepted)
-        {
-            var packet = new SessionAcceptedPacket(accepted);
-
-            await udpEndpoint.SendPacketAsync(ip, packet, true);
-        }
-
         private void UdpEndpoint_OnPacketReceived(NetworkPacket packet, IPEndPoint endPoint)
         {
-            if (packet.packetType == OpenSessionRequestPacket.PacketType)
+            switch (packet.packetType)
             {
-                OpenSessionRequestPacket openSessionPacket = new OpenSessionRequestPacket();
-                openSessionPacket.Deserialize(packet.payload, 0, packet.payload.Length);
-
-                var session = new UDPSession(openSessionPacket, endPoint, udpEndpoint);
-                bool success = sessions.TryAdd(endPoint, session);
-
-                AcceptSessionRequest(endPoint, success);
-            }
-            else if (packet.packetType == SessionAcceptedPacket.PacketType)
-            {
-                if (sessionOpenAttempt.TryGetValue(endPoint, out var timestamp))
-                {
-                    if ((DateTime.Now - timestamp).TotalMilliseconds > _timeout)
-                        return;
-                }
-
-                SessionAcceptedPacket acceptedPacket = new SessionAcceptedPacket();
-                acceptedPacket.Deserialize(packet.payload, 0, packet.payload.Length);
-
-                if (acceptedPacket.SessionAccepted)
-                {
-                    var session = new UDPSession(acceptedPacket, endPoint, udpEndpoint);
-                    sessions.TryAdd(endPoint, session);
-                }
-            } else if (packet.packetType == PermissionsRequestPacket.PacketType)
-            {
-                PermissionsRequestPacket permissionsRequestPacket = new PermissionsRequestPacket();
-                packet.Deserialize(ref permissionsRequestPacket);
-
-                if (permissionsRequestPacket.Nonce != 0)
-                {
-                    
-                }
+                case OpenSessionRequestPacket.PacketType:
+                    AcceptSessionRequest(packet, endPoint);
+                    break;
+                case SessionAcceptedPacket.PacketType:
+                    SessionAccepted(packet, endPoint);
+                    break;
             }
 
-            if (sessions.TryGetValue(endPoint, out var outSession))
-                outSession.lastHeardFrom = DateTime.Now;
+            if (sessions.TryGetValue(endPoint, out UDPSession outSession))
+                outSession.OnPacketReceived(packet, endPoint);
+        }
+
+        private async void AcceptSessionRequest(NetworkPacket packet, IPEndPoint endPoint)
+        {
+            OpenSessionRequestPacket openSessionPacket = new OpenSessionRequestPacket();
+            openSessionPacket.Deserialize(packet.payload, 0, packet.payload.Length);
+
+            var session = new UDPSession(openSessionPacket, endPoint, udpEndpoint);
+            session.SetTimeout(_timeout, OnSessionTimedOutCallBack);
+            bool success = sessions.TryAdd(endPoint, session);
+
+            var acceptancePacket = new SessionAcceptedPacket(success);
+
+            await udpEndpoint.SendPacketAsync(endPoint, acceptancePacket, true);
+        }
+
+        private void SessionAccepted(NetworkPacket packet, IPEndPoint endPoint)
+        {
+            if (sessionOpenAttempt.TryGetValue(endPoint, out var timestamp))
+            {
+                if ((DateTime.Now - timestamp).TotalMilliseconds > _timeout)
+                    return;
+            }
+
+            SessionAcceptedPacket acceptedPacket = new SessionAcceptedPacket();
+            acceptedPacket.Deserialize(packet.payload, 0, packet.payload.Length);
+
+            if (acceptedPacket.SessionAccepted)
+            {
+                var session = new UDPSession(acceptedPacket, endPoint, udpEndpoint);
+                session.SetTimeout(_timeout, OnSessionTimedOutCallBack);
+                sessions.TryAdd(endPoint, session);
+            }
+        }
+
+        private void OnSessionTimedOutCallBack(object? state)
+        {
+            UDPSession session = (UDPSession)state;
+
+            OnSessionTimedOut?.Invoke(session);
+
+            sessions.Remove(session.remoteEP, out var sessionRef);
+            sessionRef.Dispose();
         }
 
         private void Service_immediatePacketSendRequestEvent(IPEndPoint endPoint, INetworkPacket packet, bool reliable)

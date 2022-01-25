@@ -64,8 +64,6 @@ namespace UDPLibrary.Packets
                     return typeof(OpenSessionRequestPacket);
                 case 5:
                     return typeof(SessionAcceptedPacket);
-                case 6:
-                    return typeof(PermissionsRequestPacket);
 
                 default:
                     return null;

@@ -14,7 +14,12 @@ namespace UDPThing
             client.RawOnPacketReceived += OnReceive;
 
             Console.WriteLine("Ready.");
-            while (true) ;
+            while (true)
+            {
+                Console.ReadLine();
+                GC.Collect();
+                Console.WriteLine("GC executed");
+            }
         }
 
         private static void OnReceive(NetworkPacket incoming, IPEndPoint ep)

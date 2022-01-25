@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UDPLibrary.Packets;
 
-namespace UDPLibrary.RUdp
+namespace UDPLibrary.Core
 {
     internal class PacketTracker
     {

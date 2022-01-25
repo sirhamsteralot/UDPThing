@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 using UDPLibrary.Packets;
 using System.Security.Cryptography;
 using UDPLibrary.Core;
+using System.Threading;
 
 namespace UDPLibrary
 {
-    public class UDPSession
+    public class UDPSession : IDisposable
     {
-        public IPEndPoint endpoint;
+        public IPEndPoint remoteEP;
         public uint sessionVersion;
 
-        public uint permissions;
-
-        public DateTime lastHeardFrom;
+        private int _timeoutMS;
+        private Timer _timeoutTimer;
 
         private UDPCore _udpCore;
 
@@ -33,31 +33,30 @@ namespace UDPLibrary
 
         private UDPSession(UDPCore udpCore, IPEndPoint source)
         {
-            endpoint = source;
+            remoteEP = source;
             _udpCore = udpCore;
+        }
+
+        public void SetTimeout(int timeoutMS, TimerCallback timeoutCallback)
+        {
+            _timeoutMS = timeoutMS;
+            _timeoutTimer = new Timer(timeoutCallback, this, timeoutMS, Timeout.Infinite);
         }
 
         public void BufferPacket(INetworkPacket packet)
         {
-            _udpCore.BufferPacket(endpoint, packet);
+            _udpCore.BufferPacket(remoteEP, packet);
         }
 
-        public async Task<bool> RequestPermissions(uint permissions)
+        public void OnPacketReceived(NetworkPacket packet, IPEndPoint endPoint)
         {
-            _udpCore.OnPacketReceived += _udpCore_OnPacketReceived;
-
-            PermissionsRequestPacket requestPacket = new PermissionsRequestPacket(permissions, RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue));
-
-            NetworkPacket responsePacket = await _udpCore.RequestResponseAsync(endpoint, requestPacket, true);
-            requestPacket.Deserialize(responsePacket.payload, 0, responsePacket.payload.Length);
-
-
+            _timeoutTimer?.Change(_timeoutMS, Timeout.Infinite);
         }
 
-        private void _udpCore_OnPacketReceived(NetworkPacket packet, IPEndPoint ep)
+        public void Dispose()
         {
-            if (ep != endpoint)
-                return;
+            _timeoutTimer.Dispose();
+            _timeoutTimer = null;
         }
     }
 }

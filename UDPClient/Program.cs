@@ -21,7 +21,7 @@ class Program
         Console.ReadLine();
         Console.WriteLine("opening...");
 
-        var session = await udpEndpoint.OpenSession(ep);
+        UDPSession session = await udpEndpoint.OpenSession(ep);
 
         if (session != null)
             Console.WriteLine("Session opened!");

@@ -82,19 +82,17 @@ namespace UDPLibrary.Core
 
         public async Task<NetworkPacket> RequestResponseAsync(IPEndPoint endpoint, INetworkPacket outGoingPacket, bool reliable)
         {
-            byte[] headers = new byte[4];
-            RandomNumberGenerator.Fill(headers);
-            var packedPacket = PacketHelper.CreatePacket(outGoingPacket, _broadcastCount, headers, true);
+            int streamId = RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+
+            var packedPacket = PacketHelper.CreatePacket(outGoingPacket, _broadcastCount, true, streamId);
 
             await SendPacketAsync(endpoint, packedPacket);
-
-            int idAsByte = BitConverter.ToInt32(headers);
 
             for (int i = 0; i < _timeout; i += _timeout / 10)
             {
                 await Task.Delay(_timeout / 100);
 
-                if (_requestResponses.TryGetValue(idAsByte, out var responseByte))
+                if (_requestResponses.TryGetValue(streamId, out var responseByte))
                 {
                     return responseByte;
                 }
@@ -124,15 +122,7 @@ namespace UDPLibrary.Core
             if (packet.packetType == AckPacket.packetType)
                 _packetTracker.OnPacketAcknowledged(packet);
 
-            if (packet.eventstreamId == 4)
-            {
-                fixed (byte* p = packet.headers)
-                {
-                    int reqId = *(int*)p;
-
-                    _requestResponses[reqId] = packet;
-                }
-            }
+            _requestResponses[packet.eventstreamId] = packet;
 
             if (EP != null)
             {
