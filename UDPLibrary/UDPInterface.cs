@@ -132,7 +132,7 @@ namespace UDPLibrary
 
                 if (permissionsRequestPacket.Nonce != 0)
                 {
-                    Sha
+                    
                 }
             }
 

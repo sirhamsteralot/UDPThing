@@ -12,6 +12,7 @@ namespace UDPLibrary.Packets
 
         public uint RequestedPermissions;
         public int Nonce;
+        public byte[] shaHash;
         public bool PermissionsGranted;
 
         public PermissionsRequestPacket() { }
