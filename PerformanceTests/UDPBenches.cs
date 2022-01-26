@@ -42,33 +42,6 @@ namespace PerformanceTests
         bool reliable = false;
 
         [Benchmark]
-        public unsafe void OverHeadBench()
-        {
-            byte[] payload = new byte[13];
-
-            uint packetType = 0;
-            
-
-            fixed (byte* pbytes = &payload[0])
-            {
-                *(uint*)pbytes = networkingVersion;
-                *(uint*)(pbytes + 4) = packetType;
-                *(uint*)(pbytes + 8) = index;
-                *(bool*)(pbytes + 12) = reliable;
-            }
-
-            var networkPacket = new NetworkPacket()
-            {
-                packetVersion = networkingVersion,
-                packetId = index,
-                packetType = packetType,
-                reliablePacket = reliable,
-            };
-
-            networkPacket.payload = payload;
-        }
-
-        [Benchmark]
         public void SendMessageBench()
         {
             TestPacket packet = new TestPacket();
