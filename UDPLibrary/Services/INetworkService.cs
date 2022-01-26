@@ -11,9 +11,6 @@ namespace UDPLibrary.Services
 {
     public interface INetworkService
     {
-        public event Action<IPEndPoint, INetworkPacket, bool>? immediatePacketSendRequestEvent;
-        public event Action<IPEndPoint, INetworkPacket>? packetQueueEvent;
-
         public void OnPacketReceived(NetworkPacket packet, IPEndPoint source);
         public void OnPacketFailedToSend(NetworkPacket packet);
 

@@ -27,6 +27,9 @@ namespace UDPLibrary.Packets
 
         public void AddPacket(INetworkPacket packet)
         {
+            if (packet is CompositePacket)
+                throw new Exception("Cannot have nested composite packets!");
+
             subPackets.Add(packet);
             packageSizes.Add(packet.GetSize());
             subPacketTypes.Add(packet.GetPacketType());
@@ -54,7 +57,7 @@ namespace UDPLibrary.Packets
 
                     var thingToAdd = (INetworkPacket)Activator.CreateInstance(PacketHelper.GetPacketType(packetType));
                     if (thingToAdd == null)
-                        throw new Exception("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                        throw new Exception("was unable to reconstruct packet!");
                     subPackets.Add(thingToAdd);
                 }
 

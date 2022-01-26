@@ -14,6 +14,8 @@ namespace UDPLibrary
 {
     public class UDPInterface
     {
+        public const bool SELFLOGGING = false;
+
         public ConcurrentDictionary<IPEndPoint, UDPSession> sessions;
 
         public ConcurrentDictionary<IPEndPoint, DateTime> sessionOpenAttempt;
@@ -25,10 +27,11 @@ namespace UDPLibrary
         public event Action<NetworkPacket>? RawOnPacketFailedToSend;
 
         public event Action<UDPSession> OnSessionTimedOut;
+        public event Action<UDPSession> OnSessionOpened;
 
         private int _timeout;
 
-        public UDPInterface(int listenPort = 0, int steadyPackageRate = 60, int maxRetries = 3, int timeout = 2500)
+        public UDPInterface(int listenPort = 0, int steadyPackageRate = 60, int maxRetries = 3, int timeout = 5000)
         {
             _timeout = timeout;
 
@@ -49,7 +52,7 @@ namespace UDPLibrary
             if (!sessionOpenAttempt.TryAdd(endpoint, DateTime.Now))
                 return null;
 
-            await udpEndpoint.SendPacketAsync(endpoint, packet, true);
+            await udpEndpoint.SendPacketAsync(endpoint, packet, true, 0);
 
             for (int i = 0; i < _timeout; i += _timeout / 10)
             {
@@ -66,27 +69,20 @@ namespace UDPLibrary
 
         public void RegisterService(INetworkService service)
         {
-            service.packetQueueEvent += udpEndpoint.BufferPacket;
-            service.immediatePacketSendRequestEvent += Service_immediatePacketSendRequestEvent;
             udpEndpoint.OnPacketReceived += service.OnPacketReceived;
             services.Add(service);
 
             service.InjectSessions(sessions);
         }
 
-        public void QueuePacket(INetworkPacket packet, IPEndPoint endPoint)
+        public void QueuePacket(INetworkPacket packet, IPEndPoint endPoint, uint sessionId = 0, byte sessionSeq = 0)
         {
-            udpEndpoint.BufferPacket(endPoint, packet);
+            udpEndpoint.BufferPacket(endPoint, packet, sessionId, sessionSeq);
         }
 
-        public async Task SendImmediateReliable(INetworkPacket packet, IPEndPoint endpoint)
+        public async Task SendImmediate(INetworkPacket packet, IPEndPoint endpoint, bool reliable, uint sessionId = 0, byte sessionSeq = 0)
         {
-            await udpEndpoint.SendPacketAsync(endpoint, packet, true);
-        }
-
-        public async Task SendImmediate(INetworkPacket packet, IPEndPoint endpoint)
-        {
-            await udpEndpoint.SendPacketAsync(endpoint, packet, false);
+            await udpEndpoint.SendPacketAsync(endpoint, packet, reliable, sessionId, sessionSeq);
         }
 
         public T GetService<T>() where T : INetworkService
@@ -107,7 +103,7 @@ namespace UDPLibrary
             }
 
             if (sessions.TryGetValue(endPoint, out UDPSession outSession))
-                outSession.OnPacketReceived(packet, endPoint);
+                outSession.OnPacketReceivedCallBack(packet, endPoint);
         }
 
         private async void AcceptSessionRequest(NetworkPacket packet, IPEndPoint endPoint)
@@ -115,13 +111,22 @@ namespace UDPLibrary
             OpenSessionRequestPacket openSessionPacket = new OpenSessionRequestPacket();
             openSessionPacket.Deserialize(packet.payload, 0, packet.payload.Length);
 
-            var session = new UDPSession(openSessionPacket, endPoint, udpEndpoint);
-            session.SetTimeout(_timeout, OnSessionTimedOutCallBack);
+            uint sessionId = (uint)RandomNumberGenerator.GetInt32(int.MinValue, int.MaxValue);
+
+            var session = new UDPSession(openSessionPacket, endPoint, udpEndpoint, sessionId);
+            session.SetTimeout(_timeout);
+            session.OnSessionTimeout += OnSessionTimedOutCallBack;
+            session.SetKeepAlive(_timeout / 2);
             bool success = sessions.TryAdd(endPoint, session);
 
-            var acceptancePacket = new SessionAcceptedPacket(success);
+            var acceptancePacket = new SessionAcceptedPacket(success, sessionId);
 
-            await udpEndpoint.SendPacketAsync(endPoint, acceptancePacket, true);
+            if (SELFLOGGING)
+                Console.WriteLine($"accepting with SessionID: {sessionId}");
+
+            await udpEndpoint.SendPacketAsync(endPoint, acceptancePacket, true, sessionId);
+
+            OnSessionOpened?.Invoke(session);
         }
 
         private void SessionAccepted(NetworkPacket packet, IPEndPoint endPoint)
@@ -133,29 +138,37 @@ namespace UDPLibrary
             }
 
             SessionAcceptedPacket acceptedPacket = new SessionAcceptedPacket();
-            acceptedPacket.Deserialize(packet.payload, 0, packet.payload.Length);
+            packet.Deserialize(ref acceptedPacket);
 
-            if (acceptedPacket.SessionAccepted)
+            if (acceptedPacket.sessionAccepted)
             {
+                if (SELFLOGGING)
+                    Console.WriteLine($"sessionAccepted: {acceptedPacket.sessionId}");
+
                 var session = new UDPSession(acceptedPacket, endPoint, udpEndpoint);
-                session.SetTimeout(_timeout, OnSessionTimedOutCallBack);
+                session.SetTimeout(_timeout);
+                session.OnSessionTimeout += OnSessionTimedOutCallBack;
+                session.SetKeepAlive(_timeout / 2);
                 sessions.TryAdd(endPoint, session);
+
+                OnSessionOpened?.Invoke(session);
             }
         }
 
-        private void OnSessionTimedOutCallBack(object? state)
+        private void OnSessionTimedOutCallBack(UDPSession session)
         {
-            UDPSession session = (UDPSession)state;
-
             OnSessionTimedOut?.Invoke(session);
 
             sessions.Remove(session.remoteEP, out var sessionRef);
             sessionRef.Dispose();
+
+            if (SELFLOGGING)
+                Console.WriteLine($"Session: {session.sessionId} timed out");
         }
 
         private void Service_immediatePacketSendRequestEvent(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
         {
-            _ = udpEndpoint.SendPacketAsync(endPoint, packet, reliable);
+            _ = udpEndpoint.SendPacketAsync(endPoint, packet, reliable, 0);
         }
     }
 }

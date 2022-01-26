@@ -19,6 +19,8 @@ namespace PerformanceTests
         private UDPCore udpEndpoint;
         private IPEndPoint ep;
 
+        private byte[] toDecompress;
+
         public UDPBenches()
         {
             testPacket = new TestPacket();
@@ -29,6 +31,8 @@ namespace PerformanceTests
             udpEndpoint = new UDPCore();
             IPAddress server = IPAddress.Parse("127.0.0.1");
             ep = new IPEndPoint(server, 11000);
+
+            toDecompress = Compression.Compress(networkTestPacket.payload);
         }
 
         [Benchmark]
@@ -47,7 +51,19 @@ namespace PerformanceTests
             TestPacket packet = new TestPacket();
             packet.thisisavalue = "hello world!";
 
-            udpEndpoint.SendPacketAsync(ep, packet, false);
+            udpEndpoint.SendPacketAsync(ep, packet, false, 0).GetAwaiter().GetResult();
+        }
+
+        [Benchmark]
+        public void CompressBench()
+        {
+            var compressed = Compression.Compress(networkTestPacket.payload);
+        }
+
+        [Benchmark]
+        public void DecompressBench()
+        {
+            var decompressed = Compression.Decompress(toDecompress);
         }
     }
 }

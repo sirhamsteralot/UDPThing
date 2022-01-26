@@ -8,11 +8,15 @@ namespace UDPLibrary.Packets
 {
     public class NetworkPacket
     {
+        public const int PACKET_SIZE = 22;
+
         public uint packetVersion;
         public uint packetType;
         public uint packetId;
         public bool reliablePacket;
         public int eventstreamId;
+        public uint sessionId;
+        public byte sessionSequence;
 
         public byte[] payload;
 
@@ -30,6 +34,8 @@ namespace UDPLibrary.Packets
                 packetId = *(uint*)(pbytes + 8);
                 reliablePacket = *(bool*)(pbytes + 12);
                 eventstreamId = *(int*)(pbytes + 13);
+                sessionId = *(uint*)(pbytes + 17);
+                sessionSequence = *(pbytes + 21);
             }
 
             payload = incoming;
@@ -37,8 +43,7 @@ namespace UDPLibrary.Packets
 
         public void Deserialize<T>(ref T output) where T : INetworkPacket
         {
-            int totalSize = 17;
-            output.Deserialize(payload, totalSize, payload.Length - totalSize);
+            output.Deserialize(payload, PACKET_SIZE, payload.Length - PACKET_SIZE);
         }
     }
 }

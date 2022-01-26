@@ -9,26 +9,30 @@ namespace UDPLibrary.Packets
     public class SessionAcceptedPacket : INetworkPacket
     {
         public const int PacketType = 5;
-        public uint sessionVersion = 1;
-        public bool SessionAccepted;
+        public uint sessionVersion = 2;
+
+        public uint sessionId;
+        public bool sessionAccepted;
         
         public SessionAcceptedPacket()
         {
 
         }
 
-        public SessionAcceptedPacket(bool sessionAccepted)
+        public SessionAcceptedPacket(bool sessionAccepted, uint sessionId)
         {
-            SessionAccepted = sessionAccepted;
+            this.sessionAccepted = sessionAccepted;
+            this.sessionId = sessionId;
         }
 
         public unsafe void Deserialize(byte[] payload, int start, int length)
         {
-            SessionAccepted |= payload[start] != 0;
+            sessionAccepted |= payload[start] != 0;
 
             fixed (byte* p = &payload[start + 1])
             {
                 sessionVersion = *(uint*)p;
+                sessionId = *(uint*)(p+4);
             }
         }
 
@@ -39,15 +43,16 @@ namespace UDPLibrary.Packets
 
         public int GetSize()
         {
-            return 5;
+            return 9;
         }
 
         public unsafe void Serialize(byte[] buffer, int start)
         {
-            buffer[start] = SessionAccepted ? (byte)1 : (byte)0;
+            buffer[start] = sessionAccepted ? (byte)1 : (byte)0;
             fixed (byte* p = &buffer[start + 1])
             {
                 *(uint*)p = sessionVersion;
+                *(uint*)(p + 4) = sessionId;
             }
         }
     }

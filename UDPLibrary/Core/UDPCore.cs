@@ -56,14 +56,14 @@ namespace UDPLibrary.Core
             Receive();
         }
 
-        public void BufferPacket(IPEndPoint endPoint, INetworkPacket packet)
+        public void BufferPacket(IPEndPoint endPoint, INetworkPacket packet, uint sessionId, byte sessionSeq)
         {
-            _packetBuffering.QueuePacket(endPoint, packet);
+            _packetBuffering.QueuePacket(endPoint, packet, sessionId, sessionSeq);
         }
 
-        public async Task SendPacketAsync(IPEndPoint endPoint, INetworkPacket packet, bool reliable)
+        public async Task SendPacketAsync(IPEndPoint endPoint, INetworkPacket packet, bool reliable, uint sessionId = 0, byte sessionSeq = 0)
         {
-            NetworkPacket networkPacket = PacketHelper.CreatePacket(packet, _broadcastCount++, reliable);
+            NetworkPacket networkPacket = PacketHelper.CreatePacket(packet, _broadcastCount++, reliable, sessionId, sessionSeq);
 
             await SendPacketAsync(endPoint, networkPacket);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using UDPLibrary;
@@ -12,6 +13,7 @@ namespace UDPThing
         {
             UDPInterface client = new UDPInterface(11000);
             client.RawOnPacketReceived += OnReceive;
+            client.OnSessionOpened += Client_OnSessionOpened;
 
             Console.WriteLine("Ready.");
             while (true)
@@ -22,22 +24,34 @@ namespace UDPThing
             }
         }
 
+        private static void Client_OnSessionOpened(UDPSession obj)
+        {
+            obj.OnCompositePacketReceived += OnCompositeReceived;
+        }
+
         private static void OnReceive(NetworkPacket incoming, IPEndPoint ep)
         {
-            Console.WriteLine("====| Received broadcast: |====");
 
-            Console.WriteLine($"    Packet: V: {incoming.packetVersion} T: {incoming.packetType} I: {incoming.packetId} R: {incoming.reliablePacket}");
-            Console.WriteLine($"    Full packet: {BitConverter.ToString(incoming.payload)}");
+            //Console.WriteLine("====| Received broadcast: |====");
 
-            Console.WriteLine("===============================");
+            //Console.WriteLine($"    Packet: V: {incoming.packetVersion} T: {incoming.packetType} I: {incoming.packetId} R: {incoming.reliablePacket}");
+            //Console.WriteLine($"    Full packet: {BitConverter.ToString(incoming.payload)}");
+
+            //Console.WriteLine("===============================");
 
             if (incoming.packetType != TestPacket.PacketType)
                 return;
+        }
 
-            TestPacket packet = new TestPacket();
-            incoming.Deserialize(ref packet);
+        private static void OnCompositeReceived(List<INetworkPacket> packets, UDPSession session)
+        {
+            foreach (var packet in packets)
+            {
+                TestPacket testpacket = packet as TestPacket;
 
-            Console.WriteLine(packet.thisisavalue);
+                if (testpacket != null)
+                    Console.WriteLine(testpacket.thisisavalue);
+            }
         }
     }
 }

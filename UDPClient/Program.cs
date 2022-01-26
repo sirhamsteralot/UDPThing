@@ -22,6 +22,7 @@ class Program
         Console.WriteLine("opening...");
 
         UDPSession session = await udpEndpoint.OpenSession(ep);
+        session.OnSessionTimeout += timeoutCallback;
 
         if (session != null)
             Console.WriteLine("Session opened!");
@@ -41,6 +42,11 @@ class Program
 
             Console.WriteLine("Message sent to the broadcast address");
         }
+    }
+
+    private static void timeoutCallback(UDPSession session)
+    {
+        Console.WriteLine("session timed out!");
     }
 
     private static void UdpEndpoint_OnPacketFailedToSend(NetworkPacket obj)

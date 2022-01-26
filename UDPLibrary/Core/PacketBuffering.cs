@@ -20,7 +20,7 @@ namespace UDPLibrary.Core
 
         private UDPCore _endpoint;
 
-        public ConcurrentDictionary<IPEndPoint, CompositePacket> _bufferedPackets;
+        public ConcurrentDictionary<IPEndPoint, Tuple<uint, CompositePacket, byte>> _bufferedPackets;
 
         public PacketBuffering(UDPCore endPoint, int dataRate)
         {
@@ -35,7 +35,7 @@ namespace UDPLibrary.Core
 
             _rateTMs = (int)(1.0 / dataRate * 1000);
 
-            _bufferedPackets = new ConcurrentDictionary<IPEndPoint, CompositePacket>();
+            _bufferedPackets = new ConcurrentDictionary<IPEndPoint, Tuple<uint, CompositePacket, byte>>();
         }
 
         public void StartBuffer()
@@ -45,20 +45,20 @@ namespace UDPLibrary.Core
             BufferLoop();
         }
 
-        public void QueuePacket(IPEndPoint target, INetworkPacket packetToSend)
+        public void QueuePacket(IPEndPoint target, INetworkPacket packetToSend, uint sessionId, byte sessionSeq)
         {
             lock (_bufferedPackets)
             {
-                if (_bufferedPackets.TryGetValue(target, out CompositePacket packet))
+                if (_bufferedPackets.TryGetValue(target, out Tuple<uint, CompositePacket, byte> packet))
                 {
-                    packet.AddPacket(packetToSend);
+                    packet.Item2.AddPacket(packetToSend);
                 }
                 else
                 {
                     var tempPacket = new CompositePacket();
                     tempPacket.AddPacket(packetToSend);
 
-                    _bufferedPackets.TryAdd(target, tempPacket);
+                    _bufferedPackets.TryAdd(target, Tuple.Create(sessionId, tempPacket, sessionSeq));
                 }
             }
         }
@@ -76,7 +76,7 @@ namespace UDPLibrary.Core
                     {
                         foreach (var packet in _bufferedPackets)
                         {
-                            _endpoint.SendPacketAsync(packet.Key, packet.Value, false).ContinueWith(x => Console.WriteLine(x.Exception), TaskContinuationOptions.OnlyOnFaulted);
+                            _endpoint.SendPacketAsync(packet.Key, packet.Value.Item2, false, packet.Value.Item1, packet.Value.Item3).ContinueWith(x => Console.WriteLine(x.Exception), TaskContinuationOptions.OnlyOnFaulted);
                         }
 
                         _bufferedPackets.Clear();
