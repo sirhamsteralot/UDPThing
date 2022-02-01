@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDPLibrary", "UDPLibrary\UD
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerformanceTests", "PerformanceTests\PerformanceTests.csproj", "{52BB93C2-51C9-4BC1-89EA-5A410FEAE8F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPTests", "UDPTests\UDPTests.csproj", "{D623821D-DC21-4C66-9D9B-F2F1F6ADF4F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDPTests", "UDPTests\UDPTests.csproj", "{D623821D-DC21-4C66-9D9B-F2F1F6ADF4F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPLibraryV2", "UDPLibraryV2\UDPLibraryV2.csproj", "{866D9445-9160-4B8C-9507-58254C2CACAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +63,14 @@ Global
 		{D623821D-DC21-4C66-9D9B-F2F1F6ADF4F0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D623821D-DC21-4C66-9D9B-F2F1F6ADF4F0}.Release|x64.ActiveCfg = Release|Any CPU
 		{D623821D-DC21-4C66-9D9B-F2F1F6ADF4F0}.Release|x64.Build.0 = Release|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Debug|x64.Build.0 = Debug|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Release|x64.ActiveCfg = Release|Any CPU
+		{866D9445-9160-4B8C-9507-58254C2CACAC}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
