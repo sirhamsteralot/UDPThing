@@ -8,27 +8,30 @@ namespace UDPLibraryV2.Core.Packets
 {
     internal class NetworkPacket
     {
-        const int maximumUdpPacketSize = 256;
-        const int udpHeaderSize = 28;
-        const int packetHeaderSize = 4;
-        const int payloadMaxSize = maximumUdpPacketSize - udpHeaderSize - packetHeaderSize;
+        public const int maximumUdpPacketSize = 256;
+        public const int udpHeaderSize = 28;
+        public const int packetHeaderSize = 4;
+        public const int payloadMaxSize = maximumUdpPacketSize - udpHeaderSize - packetHeaderSize;
+
+        public List<PacketFragment> Fragments => fragments;
+        public byte[] Buffer => buffer;
 
 
         // Contains a number of packet flags for compression, reliable sending etc.
         // |--- 7 ---|--- 6 ---|--- 5 ---|--- 4 ---|--- 3 ---|--- 2 ---|--- 1 ---|--- 0 ---|
-        // |    x    |    x    |    x    |    x    |    x    |   Ack   |  Compr  |   Rel   |
-        byte _packetFlags; // 1
+        // |    x    |    x    |    x    |    x    |    x    |   Ack   |    x    |   Rel   |
+        byte _packetFlags; // 0 - 0
 
-        byte _packetSeq; // 2
-        short _streamId; // 4
+        byte _packetSeq; // 1 - 1
+        short _streamId; // 2 - 3
 
-        List<Fragment> fragments;
+        List<PacketFragment> fragments;
 
-        byte[] bytes;
+        byte[] buffer = null;
 
         internal unsafe NetworkPacket(byte[] receiveBuffer)
         {
-            bytes = receiveBuffer;
+            buffer = receiveBuffer;
 
             fixed (byte* receiveBufferPtr = receiveBuffer)
             {
@@ -36,30 +39,55 @@ namespace UDPLibraryV2.Core.Packets
                 _packetSeq = *(receiveBufferPtr + 1);
                 _streamId = *(short*)(receiveBufferPtr + 2);
             }
+
+            int bytesLeft = receiveBuffer.Length - packetHeaderSize;
+            while (bytesLeft > 0)
+            {
+                if (fragments == null)
+                    fragments = new List<PacketFragment>();
+
+                var fragment = new PacketFragment(receiveBuffer, receiveBuffer.Length - bytesLeft);
+                fragments.Add(fragment);
+
+                bytesLeft -= fragment.FragmentSize;
+            }
         }
 
-        internal NetworkPacket(byte[] sendBuffer, PacketFlags packetFlags, byte packetSeq, short streamId)
+        internal NetworkPacket(PacketFlags packetFlags, byte packetSeq, short streamId)
         {
-            bytes = sendBuffer;
-
             _packetFlags = (byte)packetFlags;
             _packetSeq = packetSeq;
             _streamId = streamId;
         }
 
-        internal unsafe struct Fragment
+        internal void AddFragment(PacketFragment fragment)
         {
-            // Contains if this fragment contains certain header values or not for serialization/deserialization
-            // |--- 7 ---|--- 6 ---|--- 5 ---|--- 4 ---|--- 3 ---|--- 2 ---|--- 1 ---|--- 0 ---|
-            // |    x    |    x    |    x    |    x    |  Index  |  Size   | FragID  | TypeID  |
-            public byte HeaderFlags;
+            if (fragments == null)
+                fragments = new List<PacketFragment>();
 
-            public short TypeId; // 3
-            public short FragmentId; // 5
-            public int Size; // 9
-            public int Index; // 13
+            fragments.Add(fragment);
+        }
 
-            public byte* arrayPointer;
+        internal unsafe int SerializeToBuffer(byte[] sendBuffer)
+        {
+            int bytesSerialized = 0;
+
+            fixed (byte* sendBufferPtr = sendBuffer)
+            {
+                *sendBufferPtr = _packetFlags;
+                *(sendBufferPtr + 1) = _packetSeq;
+                *(short*)(sendBufferPtr + 2) = _streamId;
+
+                bytesSerialized += 4;
+            }
+
+            foreach (var fragment in fragments)
+            {
+                fragment.WriteToBuffer(sendBuffer, bytesSerialized);
+                bytesSerialized += fragment.FragmentSize;
+            }
+
+            return bytesSerialized;
         }
     }
 }

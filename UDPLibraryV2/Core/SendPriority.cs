@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UDPLibraryV2.Core.Packets
+namespace UDPLibraryV2.Core
 {
-    [Flags]
-    internal enum PacketFlags
+    internal enum SendPriority
     {
-        Acknowledge = 1,
-        Reliable = 2,
+        High = 0,
+        Medium = 1,
+        Low = 2,
     }
 }

@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 namespace UDPLibraryV2.Core.Packets
 {
     [Flags]
-    internal enum PacketFlags
+    internal enum FragmentFlags
     {
-        Acknowledge = 1,
-        Reliable = 2,
+        TypeId = 1,
+        Fragmented = 2,
+        Compressed = 4,
     }
 }
