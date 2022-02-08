@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace UDPLibraryV2.Core.Packets
 {
     [Flags]
-    internal enum FragmentFlags
+    public enum FragmentFlags
     {
         TypeId = 1,
         Fragmented = 2,

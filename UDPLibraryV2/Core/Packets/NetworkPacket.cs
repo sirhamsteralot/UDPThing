@@ -8,13 +8,14 @@ namespace UDPLibraryV2.Core.Packets
 {
     internal class NetworkPacket
     {
-        public const int maximumUdpPacketSize = 256;
+        public const int maximumUdpPacketSize = 128;
         public const int udpHeaderSize = 28;
         public const int packetHeaderSize = 4;
         public const int payloadMaxSize = maximumUdpPacketSize - udpHeaderSize - packetHeaderSize;
 
         public List<PacketFragment> Fragments => fragments;
         public byte[] Buffer => buffer;
+        public short Streamid => _streamId;
 
 
         // Contains a number of packet flags for compression, reliable sending etc.
@@ -80,6 +81,9 @@ namespace UDPLibraryV2.Core.Packets
 
                 bytesSerialized += 4;
             }
+
+            if (fragments == null)
+                return bytesSerialized;
 
             foreach (var fragment in fragments)
             {

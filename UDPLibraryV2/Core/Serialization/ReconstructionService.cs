@@ -24,19 +24,23 @@ namespace UDPLibraryV2.Core.Serialization
         {
             int currentLocation = NetworkPacket.packetHeaderSize;
 
+            if (incomingPacket.Fragments == null)
+                return;
+
             foreach (PacketFragment fragment in incomingPacket.Fragments)
             {
                 if ((fragment.HeaderFlags & FragmentFlags.Fragmented) != FragmentFlags.Fragmented)
                 {
                     byte[] payloadBytes = new byte[fragment.FragmentSize];
                     Buffer.BlockCopy(incomingPacket.Buffer, currentLocation, payloadBytes, 0, payloadBytes.Length);
-                    OnPayloadReconstructed?.Invoke(new CompletePacket(payloadBytes, fragment.HeaderFlags, fragment.TypeId), sourceEndPoint);
+                    OnPayloadReconstructed?.Invoke(new CompletePacket(payloadBytes, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid), sourceEndPoint);
+                    continue;
                 }
 
                 CompletePacket completePacket;
                 if (!_fragmentedFragments.TryGetValue(fragment.FragmentId, out completePacket))
                 {
-                    completePacket = new CompletePacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId);
+                    completePacket = new CompletePacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid);
                     _fragmentedFragments[fragment.FragmentId] = completePacket;
                 }
 

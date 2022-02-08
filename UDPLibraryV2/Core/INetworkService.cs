@@ -10,6 +10,6 @@ namespace UDPLibraryV2.Core
 {
     internal interface INetworkService
     {
-        public void OnMessageReceivedRaw(NetworkPacket incomingPacket, IPEndPoint? sourceEndPoint);
+        void OnMessageReceivedRaw(NetworkPacket incomingPacket, IPEndPoint? sourceEndPoint);
     }
 }

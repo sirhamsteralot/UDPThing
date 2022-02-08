@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using UDPLibraryV2.Core.Packets;
 
-namespace UDPLibraryV2.Core.Packets
+namespace UDPLibraryV2.Core.PacketQueueing
 {
     internal class PacketSender
     {
@@ -23,7 +25,7 @@ namespace UDPLibraryV2.Core.Packets
         int _packetRate;
         int _delayMs;
 
-        bool active;
+        bool active = true;
 
         public PacketSender(UDPCore udpCore, int maximumPackageSize, int packetRate)
         {
@@ -31,12 +33,22 @@ namespace UDPLibraryV2.Core.Packets
             _maximumPackageSize = maximumPackageSize;
 
             _packetRate = packetRate;
-            _delayMs = (1 * 10^3) / packetRate;
+            _delayMs = 1000 / packetRate;
 
             _sendQueue = new ConcurrentDictionary<short, SendQueue>();
             _sendTargets = new ConcurrentDictionary<short, SendTarget>();
 
             _sendBuffer = new byte[maximumPackageSize];
+        }
+
+        public short OpenStream(IPEndPoint endPoint)
+        {
+            short streamCode = _udpCore.GetStreamCodeLock();
+
+            _sendTargets[streamCode] = new SendTarget(endPoint);
+            _sendQueue[streamCode] = new SendQueue();
+
+            return streamCode;
         }
 
         public void QueueFragment(short streamId, PacketFragment fragment, SendPriority priority)
@@ -51,8 +63,11 @@ namespace UDPLibraryV2.Core.Packets
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 foreach (var keyvaluepair in _sendTargets)
                 {
+                    if (_sendQueue[keyvaluepair.Key].Count < 1)
+                        continue;
+
                     PrepareNextPacket(0, keyvaluepair.Key);
-                    _udpCore.SendBytes(_sendBuffer, _sendBufferSize, keyvaluepair.Value.endPoint);
+                    _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Value.endPoint).ContinueWith(x => throw x.Exception, TaskContinuationOptions.OnlyOnFaulted);
                 }
                 stopwatch.Stop();
                 int elapsed = (int)stopwatch.ElapsedMilliseconds;
@@ -75,11 +90,20 @@ namespace UDPLibraryV2.Core.Packets
             {
                 PacketFragment fragmentToAdd;
 
-                if (streamQueue.TryDeQueue(priority, out fragmentToAdd))
+                if (streamQueue.TryPeek(priority, out fragmentToAdd))
                 {
-                    packet.AddFragment(fragmentToAdd);
-                    remainingSize -= fragmentToAdd.FragmentSize;
-                } else
+                    if (remainingSize - fragmentToAdd.FragmentSize > 0)
+                    {
+                        streamQueue.TryDeQueue(priority, out fragmentToAdd);
+
+                        packet.AddFragment(fragmentToAdd);
+                        remainingSize -= fragmentToAdd.FragmentSize;
+                    } else
+                    {
+                        break;
+                    }
+                }
+                else
                 {
                     priority++;
                 }

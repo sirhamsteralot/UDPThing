@@ -16,7 +16,7 @@ namespace UDPLibraryV2.Core.Packets
         // |    x    |    x    |    x    |    x    |    x    |  Compr  |  Fragd  | TypeID  |
         public FragmentFlags HeaderFlags = 0; // use only the first byte (0-0)
 
-        public short FragmentSize = 0;  // 1-2
+        public short FragmentSize = 3;  // 1-2
         public short TypeId = 0;        // 3-4
 
         public short FragmentId = 0;    // 5-6
@@ -91,7 +91,7 @@ namespace UDPLibraryV2.Core.Packets
             fixed (byte* arrayPtr = &buffer[startPos])
             {
                 *(byte*)(arrayPtr) = (byte)HeaderFlags;
-                *(short*)(arrayPtr + 1) = FragmentSize;
+                (*(short*)(arrayPtr + 1)) = FragmentSize;
                 writePos += 3;
 
                 if ((HeaderFlags & FragmentFlags.TypeId) == FragmentFlags.TypeId)
@@ -109,7 +109,7 @@ namespace UDPLibraryV2.Core.Packets
                 }
             }
 
-            _payload.CopyTo(buffer, writePos);
+            _payload.CopyTo(buffer, startPos + writePos);
         }
     }
 }

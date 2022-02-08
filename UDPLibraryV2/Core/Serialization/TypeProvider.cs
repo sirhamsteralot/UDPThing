@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace UDPLibraryV2.Core.Serialization
     {
         public static TypeProvider Instance = new TypeProvider();
 
-        public Dictionary<short, Type> typeMap = new Dictionary<short, Type>();
+        public ConcurrentDictionary<short, Type> typeMap = new ConcurrentDictionary<short, Type>();
 
         public TypeProvider()
         {
@@ -22,9 +23,9 @@ namespace UDPLibraryV2.Core.Serialization
             return typeMap[typeId];
         }
 
-        public void RegisterType(short typeId, Type type)
+        public bool TryRegisterType(short typeId, Type type)
         {
-            typeMap.Add(typeId, type);
+            return typeMap.TryAdd(typeId, type);
         }
     }
 }

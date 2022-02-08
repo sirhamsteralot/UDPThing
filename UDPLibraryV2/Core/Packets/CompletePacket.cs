@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Packets
 {
-    internal class CompletePacket
+    public class CompletePacket
     {
         public FragmentFlags Flags { get; set; }
         public short TypeId;
+        public short StreamId;
 
         ArraySegment<byte>[]? totalPacketData;
         int progress = 0;
@@ -18,15 +19,17 @@ namespace UDPLibraryV2.Core.Packets
 
         byte[] payload;
 
-        public CompletePacket(int totalSize, FragmentFlags flags, short typeId)
+        public CompletePacket(int totalSize, FragmentFlags flags, short typeId, short streamId)
         {
+            StreamId = streamId;
             Flags = flags;
             TypeId = typeId;
             totalPacketData = new ArraySegment<byte>[totalSize];
         }
 
-        public CompletePacket(byte[] payload, FragmentFlags flags, short typeId)
+        public CompletePacket(byte[] payload, FragmentFlags flags, short typeId, short streamId)
         {
+            StreamId = streamId;
             Flags = flags;
             TypeId = typeId;
             this.payload = payload;

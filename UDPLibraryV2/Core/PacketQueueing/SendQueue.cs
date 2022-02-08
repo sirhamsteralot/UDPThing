@@ -6,32 +6,42 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
 
-namespace UDPLibraryV2.Core
+namespace UDPLibraryV2.Core.PacketQueueing
 {
     internal class SendQueue
     {
+        public int Count { get; set; }
+
         private Dictionary<SendPriority, ConcurrentQueue<PacketFragment>> _sendQueue;
 
         public SendQueue()
         {
             _sendQueue = new Dictionary<SendPriority, ConcurrentQueue<PacketFragment>>();
+
+            var highQueue = new ConcurrentQueue<PacketFragment>();
+            _sendQueue.Add(SendPriority.High, highQueue);
+
+            var medQueue = new ConcurrentQueue<PacketFragment>();
+            _sendQueue.Add(SendPriority.Medium, medQueue);
+
+            var lowQueue = new ConcurrentQueue<PacketFragment>();
+            _sendQueue.Add(SendPriority.Low, lowQueue);
         }
 
         public void Queue(PacketFragment fragment, SendPriority priority)
         {
-            ConcurrentQueue<PacketFragment> queue;
-            if (!_sendQueue.TryGetValue(priority, out queue))
-            {
-                queue = new ConcurrentQueue<PacketFragment>();
-                _sendQueue.Add(priority, queue);
-            }
-            
-            queue.Enqueue(fragment);
+            _sendQueue[priority].Enqueue(fragment);
+            Count++;
         }
 
         public bool TryDeQueue(SendPriority priority, out PacketFragment fragment)
         {
-            return _sendQueue[priority].TryDequeue(out fragment);
+            if( _sendQueue[priority].TryDequeue(out fragment))
+            {
+                Count--;
+                return true;
+            }
+            return false;
         }
 
         public bool TryPeek(SendPriority priority, out PacketFragment fragment)
