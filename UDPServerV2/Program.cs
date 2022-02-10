@@ -25,6 +25,7 @@ namespace UDPServerV2
         {
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
             UDPCore core = new UDPCore(endPoint);
+
             core.StartListening();
             core.StartSending();
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
@@ -50,21 +51,23 @@ namespace UDPServerV2
                 Console.ReadLine();
 
                 var serializable = new RandomSerializable(512);
-                Console.WriteLine($"    serializable: {BitConverter.ToString(serializable.bytes)}");
+                Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
                 core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
             }
-
         }
 
         private static void Core_OnPayloadReceivedEvent(ReconstructedPacket packet, IPEndPoint? source)
         {
-            Console.WriteLine("====| Received broadcast: |====");
+            Console.WriteLine("================| Received broadcast: |================");
 
-            Console.WriteLine($"    Packet: Id: {BitConverter.ToString(BitConverter.GetBytes(packet.StreamId)[0..1])} T: {packet.TypeId} F: {packet.Flags}");
-            Console.WriteLine($"    Full packet: {BitConverter.ToString(packet.GetPayloadBytes())}");
+            Console.WriteLine($"Packet: sId: {BitConverter.ToString(BitConverter.GetBytes(packet.StreamId))} T: {packet.TypeId} F: {packet.Flags}");
+            Console.WriteLine($"Source IP: {source.Address}:{source.Port}");
 
-            Console.WriteLine("===============================");
+            Console.WriteLine($"===================> Full  packet <===================");
+            Console.WriteLine($"{BitConverter.ToString(packet.GetPayloadBytes())}");
+
+            Console.WriteLine("=======================================================");
         }
     }
 }

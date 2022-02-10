@@ -24,8 +24,6 @@ namespace UDPLibraryV2.Core
         private DeconstructionService _deconstructionService;
         private ReconstructionService _reconstructionService;
 
-        
-
         private PacketSender _packetSender;
 
         private List<INetworkService> _services;

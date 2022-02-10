@@ -10,7 +10,9 @@ namespace UDPServerV2
 {
     internal class RandomSerializable : INetworkSerializable
     {
-        public short TypeId => 1;
+        public const short TYPEID = 1;
+
+        public short TypeId => TYPEID;
 
         public short MinimumBufferSize { get; set; }
 
