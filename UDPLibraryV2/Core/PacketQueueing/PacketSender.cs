@@ -56,7 +56,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
         public void OpenStream(IPEndPoint endPoint, short streamId)
         {
-            _udpCore.LockStreamCode(streamId);
+            _udpCore.TryLockStreamCode(streamId);
 
             _sendTargets[streamId] = new SendTarget(endPoint);
             _sendQueue[streamId] = new SendQueue();

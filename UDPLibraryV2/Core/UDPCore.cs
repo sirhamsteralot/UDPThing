@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.PacketQueueing;
 using UDPLibraryV2.Core.Packets;
-using UDPLibraryV2.Core.RequestResponse;
 using UDPLibraryV2.Core.Serialization;
 
 namespace UDPLibraryV2.Core
@@ -17,8 +16,6 @@ namespace UDPLibraryV2.Core
         public event Action<ReconstructedPacket, IPEndPoint?> OnPayloadReceivedEvent;
 
         public readonly int _maximumPayloadSize;
-
-        public RequestResponseManager ReqRes { get; init; }
 
         private bool _receive;
         private int _listenPort;
@@ -53,8 +50,6 @@ namespace UDPLibraryV2.Core
             RegisterService(_reconstructionService);
 
             _packetSender = new PacketSender(this, _maximumPayloadSize, sendRate);
-
-            ReqRes = new RequestResponseManager(this);
         }
 
 
@@ -101,7 +96,7 @@ namespace UDPLibraryV2.Core
             _services.Add(service);
         }
 
-        internal bool LockStreamCode(short streamId)
+        internal bool TryLockStreamCode(short streamId)
         {
             return _openStreams.Add(streamId);
         }

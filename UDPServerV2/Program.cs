@@ -5,7 +5,6 @@ using System.Text;
 using UDPLibraryV2.Core;
 using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.Core.PacketQueueing;
-using UDPServerV2.ReqRes;
 using UDPLibraryV2.Core.Serialization;
 
 namespace UDPServerV2
@@ -30,9 +29,6 @@ namespace UDPServerV2
             core.StartSending();
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
-            TypeProvider.Instance.TryRegisterType(2, typeof(RandomRequest));
-            core.ReqRes.RegisterResponse(2, x => { Console.WriteLine("Request!"); return new RandomResponse(512); });
-
             Console.WriteLine("Ready. press any key to exit.");
             Console.ReadLine();
         }
@@ -48,21 +44,15 @@ namespace UDPServerV2
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
             short stream = core.OpenStream(remoteEP);
 
-            TypeProvider.Instance.TryRegisterType(3, typeof(RandomResponse));
-
             while (true)
             {
                 Console.WriteLine("Send packet?");
                 Console.ReadLine();
 
-                //var serializable = new RandomSerializable(512);
-                //Console.WriteLine($"    serializable: {BitConverter.ToString(serializable.bytes)}");
+                var serializable = new RandomSerializable(512);
+                Console.WriteLine($"    serializable: {BitConverter.ToString(serializable.bytes)}");
 
-                //core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
-
-                RandomResponse response = await core.ReqRes.Request<RandomResponse>(new RandomRequest(), remoteEP);
-
-                Console.WriteLine($"    response received: {BitConverter.ToString(response.bytes)}");
+                core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
             }
 
         }
