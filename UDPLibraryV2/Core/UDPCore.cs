@@ -28,9 +28,7 @@ namespace UDPLibraryV2.Core
 
         private List<INetworkService> _services;
 
-        private HashSet<short> _openStreams;
-
-        public UDPCore(IPEndPoint listenIp, int sendRate = 64, int maxPayloadSize = 100)
+        public UDPCore(IPEndPoint listenIp, int sendRate = 64, int maxPayloadSize = 512)
         {
             _maximumPayloadSize = maxPayloadSize;
 
@@ -38,8 +36,6 @@ namespace UDPLibraryV2.Core
             _listenPort = ((IPEndPoint)_listener.Client.LocalEndPoint).Port;
 
             _services = new List<INetworkService>();
-
-            _openStreams = new HashSet<short>();
 
             _deconstructionService = new DeconstructionService(_maximumPayloadSize - NetworkPacket.HeaderSize);
 
