@@ -7,7 +7,7 @@ using UDPLibraryV2.Core.Serialization;
 
 namespace UDPLibraryV2.Core.RequestResponse
 {
-    internal interface IRequest : INetworkSerializable
+    public interface IRequest : INetworkSerializable
     {
         public short RequestId { get; }
     }

@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Packets
 {
-    public class CompletePacket
+    public class ReconstructedPacket
     {
-        public FragmentFlags Flags { get; set; }
-        public short TypeId;
-        public short StreamId;
+        public FragmentFlags Flags { get; init; }
+        public short TypeId { get; init; }
+        public short StreamId { get; init; }
 
         ArraySegment<byte>[]? totalPacketData;
         int progress = 0;
@@ -19,7 +19,7 @@ namespace UDPLibraryV2.Core.Packets
 
         byte[] payload;
 
-        public CompletePacket(int totalSize, FragmentFlags flags, short typeId, short streamId)
+        public ReconstructedPacket(int totalSize, FragmentFlags flags, short typeId, short streamId)
         {
             StreamId = streamId;
             Flags = flags;
@@ -27,7 +27,7 @@ namespace UDPLibraryV2.Core.Packets
             totalPacketData = new ArraySegment<byte>[totalSize];
         }
 
-        public CompletePacket(byte[] payload, FragmentFlags flags, short typeId, short streamId)
+        public ReconstructedPacket(byte[] payload, FragmentFlags flags, short typeId, short streamId)
         {
             StreamId = streamId;
             Flags = flags;

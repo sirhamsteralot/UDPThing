@@ -11,7 +11,7 @@ namespace UDPLibraryV2.Core.Serialization
     internal class Serialization
     {
 
-        public object DeserializePayload(CompletePacket packet)
+        public object DeserializePayload(ReconstructedPacket packet)
         {
             Type payloadType = TypeProvider.Instance.GetType(packet.TypeId);
 

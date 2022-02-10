@@ -6,28 +6,32 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Packets
 {
-    internal unsafe struct PacketFragment
+    public unsafe struct PacketFragment
     {
+        public const int COREHEADERSIZE = 3;
+        public const int TYPEHEADERSIZE = 2;
+        public const int FRAGMENTEDHEADERSIZE = 10;
+
         public int FragmentBufferLocation { get; init; } = 0;
         public int FragmentPayloadSize { get; init; } = 0;
 
         // Contains if this fragment contains certain header values or not for serialization/deserialization
         // |--- 7 ---|--- 6 ---|--- 5 ---|--- 4 ---|--- 3 ---|--- 2 ---|--- 1 ---|--- 0 ---|
         // |    x    |    x    |    x    |    x    |    x    |  Compr  |  Fragd  | TypeID  |
-        public FragmentFlags HeaderFlags = 0; // use only the first byte (0-0)
+        public FragmentFlags HeaderFlags = 0;       // use only the first byte (0-0)
 
-        public short FragmentSize = 3;  // 1-2
-        public short TypeId = 0;        // 3-4
+        public short FragmentSize = COREHEADERSIZE; // 1-2
+        public short TypeId = 0;                    // 3-4
 
-        public short FragmentId = 0;    // 5-6
-        public int FrameCount = 0;       // 7-10
-        public int FrameIndex = 0;           // 11-14
+        public short FragmentId = 0;                // 5-6
+        public int FrameCount = 0;                  // 7-10
+        public int FrameIndex = 0;                  // 11-14
 
         private ArraySegment<byte> _payload;
 
         public PacketFragment(byte[] receiveBuffer, int startPos)
         {
-            short headerSize = 3;
+            short headerSize = COREHEADERSIZE;
 
             FragmentBufferLocation = startPos;
             HeaderFlags = (FragmentFlags)receiveBuffer[startPos];
@@ -39,7 +43,7 @@ namespace UDPLibraryV2.Core.Packets
                 if ((HeaderFlags & FragmentFlags.TypeId) == FragmentFlags.TypeId)
                 {
                     TypeId = *(short*)(arrayPtr + 3);
-                    headerSize += 2;
+                    headerSize += TYPEHEADERSIZE;
                 }
 
                 if ((HeaderFlags & FragmentFlags.Fragmented) == FragmentFlags.Fragmented)
@@ -47,7 +51,7 @@ namespace UDPLibraryV2.Core.Packets
                     FragmentId = *(short*)(arrayPtr + 5);
                     FrameCount = *(int*)(arrayPtr + 7);
                     FrameIndex = *(int*)(arrayPtr + 11);
-                    headerSize += 10;
+                    headerSize += FRAGMENTEDHEADERSIZE;
                 }
             }
 
@@ -63,7 +67,7 @@ namespace UDPLibraryV2.Core.Packets
             FrameCount = frameCount;
             FrameIndex = frameIndex;
 
-            FragmentSize += 10;
+            FragmentSize += FRAGMENTEDHEADERSIZE;
         }
 
         public PacketFragment(ArraySegment<byte> payload, short typeId, bool compression) : this(payload, compression)
@@ -71,7 +75,7 @@ namespace UDPLibraryV2.Core.Packets
             HeaderFlags |= FragmentFlags.TypeId;
             TypeId = typeId;
 
-            FragmentSize += 2;
+            FragmentSize += TYPEHEADERSIZE;
         }
 
         public PacketFragment(ArraySegment<byte> payload, bool compression)

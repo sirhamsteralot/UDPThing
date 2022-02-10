@@ -11,18 +11,18 @@ namespace UDPLibraryV2.Core.Serialization
 {
     internal class ReconstructionService : NetworkServiceBase
     {
-        public event Action<CompletePacket, IPEndPoint?> OnPayloadReconstructed;
+        public event Action<ReconstructedPacket, IPEndPoint?> OnPayloadReconstructed;
 
-        Dictionary<short, CompletePacket> _fragmentedFragments;
+        Dictionary<short, ReconstructedPacket> _fragmentedFragments;
 
         public ReconstructionService(UDPCore core) : base(core)
         {
-            _fragmentedFragments = new Dictionary<short, CompletePacket>();
+            _fragmentedFragments = new Dictionary<short, ReconstructedPacket>();
         }
 
         public override void OnMessageReceivedRaw(NetworkPacket incomingPacket, IPEndPoint? sourceEndPoint)
         {
-            int currentLocation = NetworkPacket.packetHeaderSize;
+            int currentLocation = NetworkPacket.HeaderSize;
 
             if (incomingPacket.Fragments == null)
                 return;
@@ -33,14 +33,14 @@ namespace UDPLibraryV2.Core.Serialization
                 {
                     byte[] payloadBytes = new byte[fragment.FragmentSize];
                     Buffer.BlockCopy(incomingPacket.Buffer, currentLocation, payloadBytes, 0, payloadBytes.Length);
-                    OnPayloadReconstructed?.Invoke(new CompletePacket(payloadBytes, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid), sourceEndPoint);
+                    OnPayloadReconstructed?.Invoke(new ReconstructedPacket(payloadBytes, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid), sourceEndPoint);
                     continue;
                 }
 
-                CompletePacket completePacket;
+                ReconstructedPacket completePacket;
                 if (!_fragmentedFragments.TryGetValue(fragment.FragmentId, out completePacket))
                 {
-                    completePacket = new CompletePacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid);
+                    completePacket = new ReconstructedPacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid);
                     _fragmentedFragments[fragment.FragmentId] = completePacket;
                 }
 

@@ -5,6 +5,8 @@ using System.Text;
 using UDPLibraryV2.Core;
 using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.Core.PacketQueueing;
+using UDPServerV2.ReqRes;
+using UDPLibraryV2.Core.Serialization;
 
 namespace UDPServerV2
 {
@@ -28,11 +30,14 @@ namespace UDPServerV2
             core.StartSending();
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
+            TypeProvider.Instance.TryRegisterType(2, typeof(RandomRequest));
+            core.ReqRes.RegisterResponse(2, x => { Console.WriteLine("Request!"); return new RandomResponse(512); });
+
             Console.WriteLine("Ready. press any key to exit.");
             Console.ReadLine();
         }
 
-        static void StartClient()
+        static async void StartClient()
         {
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 0);
             UDPCore core = new UDPCore(endPoint);
@@ -41,22 +46,28 @@ namespace UDPServerV2
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
-            var stream = core.OpenStream(remoteEP);
+            short stream = core.OpenStream(remoteEP);
+
+            TypeProvider.Instance.TryRegisterType(3, typeof(RandomResponse));
 
             while (true)
             {
                 Console.WriteLine("Send packet?");
                 Console.ReadLine();
 
-                var serializable = new RandomSerializable(512);
-                Console.WriteLine($"    serializable: {BitConverter.ToString(serializable.bytes)}");
+                //var serializable = new RandomSerializable(512);
+                //Console.WriteLine($"    serializable: {BitConverter.ToString(serializable.bytes)}");
 
-                core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
+                //core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
+
+                RandomResponse response = await core.ReqRes.Request<RandomResponse>(new RandomRequest(), remoteEP);
+
+                Console.WriteLine($"    response received: {BitConverter.ToString(response.bytes)}");
             }
 
         }
 
-        private static void Core_OnPayloadReceivedEvent(CompletePacket packet, IPEndPoint? source)
+        private static void Core_OnPayloadReceivedEvent(ReconstructedPacket packet, IPEndPoint? source)
         {
             Console.WriteLine("====| Received broadcast: |====");
 

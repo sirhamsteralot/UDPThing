@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Serialization
 {
-    internal class TypeProvider
+    public class TypeProvider
     {
         public static TypeProvider Instance = new TypeProvider();
 

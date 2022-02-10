@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Packets
 {
-    internal class NetworkPacket
+    public class NetworkPacket
     {
-        public const int maximumUdpPacketSize = 128;
-        public const int udpHeaderSize = 28;
-        public const int packetHeaderSize = 4;
-        public const int payloadMaxSize = maximumUdpPacketSize - udpHeaderSize - packetHeaderSize;
+        public const int HeaderSize = 4;
 
         public List<PacketFragment> Fragments => fragments;
         public byte[] Buffer => buffer;
@@ -41,7 +38,7 @@ namespace UDPLibraryV2.Core.Packets
                 _streamId = *(short*)(receiveBufferPtr + 2);
             }
 
-            int bytesLeft = receiveBuffer.Length - packetHeaderSize;
+            int bytesLeft = receiveBuffer.Length - HeaderSize;
             while (bytesLeft > 0)
             {
                 if (fragments == null)
@@ -54,7 +51,7 @@ namespace UDPLibraryV2.Core.Packets
             }
         }
 
-        internal NetworkPacket(PacketFlags packetFlags, byte packetSeq, short streamId)
+        public NetworkPacket(PacketFlags packetFlags, byte packetSeq, short streamId)
         {
             _packetFlags = (byte)packetFlags;
             _packetSeq = packetSeq;

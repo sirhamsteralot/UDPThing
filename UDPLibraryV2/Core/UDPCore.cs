@@ -7,13 +7,18 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.PacketQueueing;
 using UDPLibraryV2.Core.Packets;
+using UDPLibraryV2.Core.RequestResponse;
 using UDPLibraryV2.Core.Serialization;
 
 namespace UDPLibraryV2.Core
 {
     public class UDPCore
     {
-        public event Action<CompletePacket, IPEndPoint?> OnPayloadReceivedEvent;
+        public event Action<ReconstructedPacket, IPEndPoint?> OnPayloadReceivedEvent;
+
+        public readonly int _maximumPayloadSize;
+
+        public RequestResponseManager ReqRes { get; init; }
 
         private bool _receive;
         private int _listenPort;
@@ -22,14 +27,18 @@ namespace UDPLibraryV2.Core
         private DeconstructionService _deconstructionService;
         private ReconstructionService _reconstructionService;
 
+        
+
         private PacketSender _packetSender;
 
         private List<INetworkService> _services;
 
         private HashSet<short> _openStreams;
 
-        public UDPCore(IPEndPoint listenIp)
+        public UDPCore(IPEndPoint listenIp, int sendRate = 64, int maxPayloadSize = 100)
         {
+            _maximumPayloadSize = maxPayloadSize;
+
             _listener = new UdpClient(listenIp);
             _listenPort = ((IPEndPoint)_listener.Client.LocalEndPoint).Port;
 
@@ -37,14 +46,17 @@ namespace UDPLibraryV2.Core
 
             _openStreams = new HashSet<short>();
 
-            _deconstructionService = new DeconstructionService(NetworkPacket.payloadMaxSize / 2);
+            _deconstructionService = new DeconstructionService(_maximumPayloadSize - NetworkPacket.HeaderSize);
 
             _reconstructionService = new ReconstructionService(this);
             _reconstructionService.OnPayloadReconstructed += ReconstructionService_OnPayloadReconstructed;
             RegisterService(_reconstructionService);
 
-            _packetSender = new PacketSender(this, 128, 120);
+            _packetSender = new PacketSender(this, _maximumPayloadSize, sendRate);
+
+            ReqRes = new RequestResponseManager(this);
         }
+
 
         public void StartListening()
         {
@@ -60,6 +72,16 @@ namespace UDPLibraryV2.Core
         public short OpenStream(IPEndPoint endPoint)
         {
             return _packetSender.OpenStream(endPoint);
+        }
+
+        public void OpenStream(IPEndPoint endPoint, short streamId)
+        {
+            _packetSender.OpenStream(endPoint, streamId);
+        }
+
+        public void CloseStream(short streamId)
+        {
+            _packetSender.CloseStream(streamId);
         }
 
         public void QueueSerializable(INetworkSerializable serializable, short streamId, bool compression, SendPriority priority)
@@ -79,12 +101,17 @@ namespace UDPLibraryV2.Core
             _services.Add(service);
         }
 
+        internal bool LockStreamCode(short streamId)
+        {
+            return _openStreams.Add(streamId);
+        }
+
         internal short GetStreamCodeLock()
         {
             short value = 0;
             do
             {
-                value = (short)Random.Shared.NextInt64();
+                value = (short)Random.Shared.Next();
 
             }
             while (_openStreams.Contains(value));
@@ -107,7 +134,7 @@ namespace UDPLibraryV2.Core
             _packetSender.QueueFragment(streamid, fragment, priority);
         }
 
-        private void ReconstructionService_OnPayloadReconstructed(CompletePacket packet, IPEndPoint? sourceEP)
+        private void ReconstructionService_OnPayloadReconstructed(ReconstructedPacket packet, IPEndPoint? sourceEP)
         {
             OnPayloadReceivedEvent?.Invoke(packet, sourceEP);
         }

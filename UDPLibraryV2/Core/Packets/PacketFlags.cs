@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace UDPLibraryV2.Core.Packets
 {
     [Flags]
-    internal enum PacketFlags
+    public enum PacketFlags
     {
         Acknowledge = 1,
         Reliable = 2,

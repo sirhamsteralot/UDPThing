@@ -4,4 +4,4 @@ using BenchmarkDotNet.Running;
 using PerformanceTests;
 
 var config = ManualConfig.CreateMinimumViable().AddDiagnoser(MemoryDiagnoser.Default);
-var summary = BenchmarkRunner.Run(typeof(SocketVsClient), config);
+var summary = BenchmarkRunner.Run(typeof(RandomBenches), config);

@@ -7,7 +7,7 @@ using UDPLibraryV2.Core.Serialization;
 
 namespace UDPLibraryV2.Core.RequestResponse
 {
-    internal interface IResponse : INetworkSerializable
+    public interface IResponse : INetworkSerializable
     {
     }
 }

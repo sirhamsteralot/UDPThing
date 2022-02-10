@@ -12,33 +12,36 @@ namespace UDPLibraryV2.Core.PacketQueueing
 {
     internal class PacketSender
     {
-        public double LoadPercentage;
+        public int TargetSendRate { get; init; }
 
         UDPCore _udpCore;
         ConcurrentDictionary<short, SendQueue> _sendQueue;
         ConcurrentDictionary<short, SendTarget> _sendTargets;
-        int _maximumPackageSize;
+        int _maximumPayloadSize;
 
         byte[] _sendBuffer;
         int _sendBufferSize;
 
-        int _packetRate;
+        Stopwatch _sendTimer;
+        
         int _delayMs;
 
         bool active = true;
 
-        public PacketSender(UDPCore udpCore, int maximumPackageSize, int packetRate)
+        public PacketSender(UDPCore udpCore, int maximumPayloadSize, int sendRate)
         {
             _udpCore = udpCore;
-            _maximumPackageSize = maximumPackageSize;
+            _maximumPayloadSize = maximumPayloadSize;
 
-            _packetRate = packetRate;
-            _delayMs = 1000 / packetRate;
+            TargetSendRate = sendRate;
+            _delayMs = 1000 / sendRate;
 
             _sendQueue = new ConcurrentDictionary<short, SendQueue>();
             _sendTargets = new ConcurrentDictionary<short, SendTarget>();
 
-            _sendBuffer = new byte[maximumPackageSize];
+            _sendTimer = Stopwatch.StartNew();
+
+            _sendBuffer = new byte[maximumPayloadSize];
         }
 
         public short OpenStream(IPEndPoint endPoint)
@@ -51,6 +54,20 @@ namespace UDPLibraryV2.Core.PacketQueueing
             return streamCode;
         }
 
+        public void OpenStream(IPEndPoint endPoint, short streamId)
+        {
+            _udpCore.LockStreamCode(streamId);
+
+            _sendTargets[streamId] = new SendTarget(endPoint);
+            _sendQueue[streamId] = new SendQueue();
+        }
+
+        public void CloseStream(short streamId)
+        {
+            _sendTargets.TryRemove(streamId, out _);
+            _sendQueue.TryRemove(streamId, out _);
+        }
+
         public void QueueFragment(short streamId, PacketFragment fragment, SendPriority priority)
         {
             _sendQueue[streamId].Queue(fragment, priority);
@@ -60,27 +77,33 @@ namespace UDPLibraryV2.Core.PacketQueueing
         {
             while (active)
             {
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                foreach (var keyvaluepair in _sendTargets)
-                {
-                    if (_sendQueue[keyvaluepair.Key].Count < 1)
-                        continue;
+                long startTime = _sendTimer.ElapsedMilliseconds;
 
-                    PrepareNextPacket(0, keyvaluepair.Key);
-                    _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Value.endPoint).ContinueWith(x => throw x.Exception, TaskContinuationOptions.OnlyOnFaulted);
-                }
-                stopwatch.Stop();
-                int elapsed = (int)stopwatch.ElapsedMilliseconds;
-                LoadPercentage = elapsed / _delayMs;
+                SendTick();
 
-                await Task.Delay(_delayMs - elapsed);
+                int waitTime = _delayMs - (int)(_sendTimer.ElapsedMilliseconds - startTime);
+
+                if (waitTime > 0)
+                    await Task.Delay(waitTime);
+            }
+        }
+
+        private void SendTick()
+        {
+            foreach (var keyvaluepair in _sendTargets)
+            {
+                if (_sendQueue[keyvaluepair.Key].Count < 1)
+                    continue;
+
+                PrepareNextPacket(0, keyvaluepair.Key);
+                _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Value.endPoint).ContinueWith(x => throw x.Exception, TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 
         private void PrepareNextPacket(PacketFlags flags, short streamId)
         {
             NetworkPacket packet = new NetworkPacket(flags, _sendTargets[streamId].sequenceByte++, streamId);
-            int remainingSize = _maximumPackageSize - NetworkPacket.packetHeaderSize;
+            int remainingSize = _maximumPayloadSize;
 
             var streamQueue = _sendQueue[streamId];
 
@@ -92,7 +115,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
                 if (streamQueue.TryPeek(priority, out fragmentToAdd))
                 {
-                    if (remainingSize - fragmentToAdd.FragmentSize > 0)
+                    if (remainingSize - fragmentToAdd.FragmentSize >= 0)
                     {
                         streamQueue.TryDeQueue(priority, out fragmentToAdd);
 
