@@ -11,6 +11,9 @@ namespace UDPServerV2
 {
     internal class Program
     {
+        static UDPCore core;
+        static bool AMCLIENT;
+
         static void Main(string[] args)
         {
             var input = Console.ReadLine();
@@ -24,7 +27,7 @@ namespace UDPServerV2
         static void StartServer()
         {
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
-            UDPCore core = new UDPCore(endPoint);
+            core = new UDPCore(endPoint);
 
             core.StartListening();
             core.StartSending();
@@ -36,14 +39,15 @@ namespace UDPServerV2
 
         static async void StartClient()
         {
+            AMCLIENT = true;
+
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 0);
-            UDPCore core = new UDPCore(endPoint);
+            core = new UDPCore(endPoint);
             core.StartListening();
             core.StartSending();
-            core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
+            core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent; 
 
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
-            short stream = core.OpenStream(remoteEP);
 
             while (true)
             {
@@ -53,7 +57,7 @@ namespace UDPServerV2
                 var serializable = new RandomSerializable(512);
                 Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
-                core.QueueSerializable(serializable, stream, false, SendPriority.Medium);
+                core.QueueSerializable(serializable, false, SendPriority.Medium, remoteEP);
             }
         }
 
@@ -68,6 +72,9 @@ namespace UDPServerV2
             Console.WriteLine($"{BitConverter.ToString(packet.GetPayloadBytes())}");
 
             Console.WriteLine("=======================================================");
+
+            if (!AMCLIENT)
+                core.QueueSerializable(new RandomSerializable(32), false, SendPriority.Medium, source);
         }
     }
 }

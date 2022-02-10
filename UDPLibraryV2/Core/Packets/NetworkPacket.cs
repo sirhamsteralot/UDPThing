@@ -17,7 +17,7 @@ namespace UDPLibraryV2.Core.Packets
 
         // Contains a number of packet flags for compression, reliable sending etc.
         // |--- 7 ---|--- 6 ---|--- 5 ---|--- 4 ---|--- 3 ---|--- 2 ---|--- 1 ---|--- 0 ---|
-        // |    x    |    x    |    x    |    x    |    x    |   Ack   |    x    |   Rel   |
+        // |    x    |    x    |    x    |    x    |    x    |    x    |   Ack   |   Rel   |
         byte _packetFlags; // 0 - 0
 
         byte _packetSeq; // 1 - 1

@@ -62,22 +62,7 @@ namespace UDPLibraryV2.Core
             _packetSender.SendNetworkMessages().ContinueWith(x => Console.WriteLine(x.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public short OpenStream(IPEndPoint endPoint)
-        {
-            return _packetSender.OpenStream(endPoint);
-        }
-
-        public void OpenStream(IPEndPoint endPoint, short streamId)
-        {
-            _packetSender.OpenStream(endPoint, streamId);
-        }
-
-        public void CloseStream(short streamId)
-        {
-            _packetSender.CloseStream(streamId);
-        }
-
-        public void QueueSerializable(INetworkSerializable serializable, short streamId, bool compression, SendPriority priority)
+        public void QueueSerializable(INetworkSerializable serializable, bool compression, SendPriority priority, IPEndPoint remote)
         {
             byte[] data = new byte[serializable.MinimumBufferSize];
             serializable.Serialize(data, 0);
@@ -85,7 +70,7 @@ namespace UDPLibraryV2.Core
             var fragments = _deconstructionService.CreateFragments(data, serializable.TypeId, compression);
             foreach (var fragment in fragments)
             {
-                QueueFragment(streamId, fragment, priority);
+                QueueFragment(fragment, priority, remote);
             }
         }
 
@@ -94,37 +79,14 @@ namespace UDPLibraryV2.Core
             _services.Add(service);
         }
 
-        internal bool TryLockStreamCode(short streamId)
-        {
-            return _openStreams.Add(streamId);
-        }
-
-        internal short GetStreamCodeLock()
-        {
-            short value = 0;
-            do
-            {
-                value = (short)Random.Shared.Next();
-
-            }
-            while (_openStreams.Contains(value));
-
-            return value;
-        }
-
-        internal void UnlockStreamCode(short code)
-        {
-            _openStreams.Remove(code);
-        }
-
         internal async Task SendBytesAsync(byte[] bytes, int amountToSend, IPEndPoint endpoint)
         {
             await _listener.SendAsync(bytes, amountToSend, endpoint);
         }
 
-        internal void QueueFragment(short streamid, PacketFragment fragment, SendPriority priority)
+        internal void QueueFragment(PacketFragment fragment, SendPriority priority, IPEndPoint remote)
         {
-            _packetSender.QueueFragment(streamid, fragment, priority);
+            _packetSender.QueueFragment(fragment, priority, remote);
         }
 
         private void ReconstructionService_OnPayloadReconstructed(ReconstructedPacket packet, IPEndPoint? sourceEP)

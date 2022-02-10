@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
@@ -11,6 +12,8 @@ namespace UDPLibraryV2.Core.PacketQueueing
     internal class SendQueue
     {
         public int Count { get; set; }
+
+        public byte SequenceByte { get; set; } = 0;
 
         private Dictionary<SendPriority, ConcurrentQueue<PacketFragment>> _sendQueue;
 
