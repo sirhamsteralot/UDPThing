@@ -25,6 +25,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
         Stopwatch _sendTimer;
         
         int _delayMs;
+        int _waitTime;
 
         bool active = true;
 
@@ -57,10 +58,10 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
                 SendTick();
 
-                int waitTime = _delayMs - (int)(_sendTimer.ElapsedMilliseconds - startTime);
+                _waitTime = _delayMs - (int)(_sendTimer.ElapsedMilliseconds - startTime);
 
-                if (waitTime > 0)
-                    await Task.Delay(waitTime);
+                if (_waitTime > 0)
+                    await Task.Delay(_waitTime);
             }
         }
 

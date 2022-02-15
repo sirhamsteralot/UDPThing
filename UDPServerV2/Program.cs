@@ -14,14 +14,14 @@ namespace UDPServerV2
         static UDPCore core;
         static bool AMCLIENT;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var input = Console.ReadLine();
 
             if (input == "s")
                 StartServer();
             else if (input == "c")
-                StartClient();
+                await StartClient();
         }
 
         static void StartServer()
@@ -37,7 +37,7 @@ namespace UDPServerV2
             Console.ReadLine();
         }
 
-        static async void StartClient()
+        static async Task StartClient()
         {
             AMCLIENT = true;
 
@@ -57,7 +57,11 @@ namespace UDPServerV2
                 var serializable = new RandomSerializable(512);
                 Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
-                core.QueueSerializable(serializable, false, SendPriority.Medium, remoteEP);
+                //core.QueueSerializable(serializable, false, SendPriority.Medium, remoteEP);
+
+                bool result = await core.SendSerializableReliable(serializable, false, remoteEP, 3, 2500);
+
+                Console.WriteLine($"Sent?: {result}");
             }
         }
 

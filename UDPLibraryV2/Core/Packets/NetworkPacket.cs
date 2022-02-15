@@ -13,6 +13,10 @@ namespace UDPLibraryV2.Core.Packets
         public List<PacketFragment> Fragments => fragments;
         public byte[] Buffer => buffer;
         public short Streamid => _streamId;
+        public byte Seq => _packetSeq;
+        public PacketFlags Flags => (PacketFlags)_packetFlags;
+
+        public int Size { get; private set; }
 
 
         // Contains a number of packet flags for compression, reliable sending etc.
@@ -30,6 +34,7 @@ namespace UDPLibraryV2.Core.Packets
         internal unsafe NetworkPacket(byte[] receiveBuffer)
         {
             buffer = receiveBuffer;
+            Size = receiveBuffer.Length;
 
             fixed (byte* receiveBufferPtr = receiveBuffer)
             {
@@ -56,6 +61,8 @@ namespace UDPLibraryV2.Core.Packets
             _packetFlags = (byte)packetFlags;
             _packetSeq = packetSeq;
             _streamId = streamId;
+
+            Size = HeaderSize;
         }
 
         internal void AddFragment(PacketFragment fragment)
@@ -64,6 +71,8 @@ namespace UDPLibraryV2.Core.Packets
                 fragments = new List<PacketFragment>();
 
             fragments.Add(fragment);
+
+            Size += fragment.FragmentSize;
         }
 
         internal unsafe int SerializeToBuffer(byte[] sendBuffer)
