@@ -16,7 +16,8 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
         UDPCore _udpCore;
         ConcurrentDictionary<IPEndPoint, SendQueue> _sendQueue;
-        
+        Thread _networkingThread;
+
         int _maximumPayloadSize;
 
         byte[] _sendBuffer;
@@ -50,25 +51,41 @@ namespace UDPLibraryV2.Core.PacketQueueing
             _sendQueue[remote].Queue(fragment, priority);
         }
 
-        public async Task SendNetworkMessages()
+        public void StartSending()
         {
-            while (active)
+            _networkingThread = new Thread(SendNetworkMessages);
+            _networkingThread.Start();
+        }
+
+        private void SendNetworkMessages()
+        {
+            try
             {
-                long startTime = _sendTimer.ElapsedMilliseconds;
+                while (active)
+                {
+                    long startTime = _sendTimer.ElapsedMilliseconds;
 
-                SendTick();
+                    SendTick();
 
-                _waitTime = _delayMs - (int)(_sendTimer.ElapsedMilliseconds - startTime);
+                    _waitTime = _delayMs - (int)(_sendTimer.ElapsedMilliseconds - startTime);
 
-                if (_waitTime > 0)
-                    await Task.Delay(_waitTime);
+                    if (_waitTime > 0)
+                        Thread.Sleep(_waitTime);
+                }
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
 
         private void SendTick()
         {
-            foreach (var keyvaluepair in _sendQueue)
+            var enumerator = _sendQueue.GetEnumerator();
+
+            while (enumerator.MoveNext())
             {
+                var keyvaluepair = enumerator.Current;
+
                 if (keyvaluepair.Value.Count < 1)
                     continue;
 

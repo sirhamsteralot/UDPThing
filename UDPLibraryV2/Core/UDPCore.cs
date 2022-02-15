@@ -57,7 +57,7 @@ namespace UDPLibraryV2.Core
 
         public void StartSending()
         {
-            _packetSender.SendNetworkMessages().ContinueWith(x => Console.WriteLine(x.Exception), TaskContinuationOptions.OnlyOnFaulted);
+            _packetSender.StartSending();
         }
 
         public void QueueSerializable(INetworkSerializable serializable, bool compression, SendPriority priority, IPEndPoint remote)
