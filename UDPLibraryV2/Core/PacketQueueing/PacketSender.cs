@@ -15,7 +15,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
         public int TargetSendRate { get; init; }
 
         UDPCore _udpCore;
-        ConcurrentDictionary<IPEndPoint, SendQueue> _sendQueue;
+        Dictionary<IPEndPoint, SendQueue> _sendQueue;
         Thread _networkingThread;
 
         int _maximumPayloadSize;
@@ -38,7 +38,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
             TargetSendRate = sendRate;
             _delayMs = 1000 / sendRate;
 
-            _sendQueue = new ConcurrentDictionary<IPEndPoint, SendQueue>();
+            _sendQueue = new Dictionary<IPEndPoint, SendQueue>();
 
             _sendTimer = Stopwatch.StartNew();
 
@@ -47,8 +47,11 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
         public void QueueFragment(PacketFragment fragment, SendPriority priority, IPEndPoint remote)
         {
-            _sendQueue.TryAdd(remote, new SendQueue());
-            _sendQueue[remote].Queue(fragment, priority);
+            lock (_sendQueue)
+            {
+                _sendQueue.TryAdd(remote, new SendQueue());
+                _sendQueue[remote].Queue(fragment, priority);
+            }
         }
 
         public void StartSending()
@@ -80,12 +83,8 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
         private void SendTick()
         {
-            var enumerator = _sendQueue.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            foreach (var keyvaluepair in _sendQueue)
             {
-                var keyvaluepair = enumerator.Current;
-
                 if (keyvaluepair.Value.Count < 1)
                     continue;
 
