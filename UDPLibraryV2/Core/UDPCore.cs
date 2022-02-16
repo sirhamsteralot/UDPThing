@@ -93,12 +93,16 @@ namespace UDPLibraryV2.Core
             {
                 if (packet.Streamid == streamId && ((packet.Flags | PacketFlags.Acknowledge) == PacketFlags.Acknowledge))
                 {
-                    if (sentPackets.Remove(packet.Seq))
+                    lock (sentPackets)
                     {
-                        if (sentPackets.Count < 1)
+                        if (sentPackets.Remove(packet.Seq))
                         {
-                            completed.SetResult(true);
-                            tokenSource.Cancel();
+                            if (sentPackets.Count < 1)
+                            {
+                                completed.SetResult(true);
+                                tokenSource.Cancel();
+
+                            }
                         }
                     }
                 }
