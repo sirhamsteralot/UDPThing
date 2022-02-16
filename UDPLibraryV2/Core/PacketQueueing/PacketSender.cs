@@ -7,12 +7,15 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
+using UDPLibraryV2.Utils;
 
 namespace UDPLibraryV2.Core.PacketQueueing
 {
     internal class PacketSender
     {
         public int TargetSendRate { get; init; }
+
+        ObjectPoolList<NetworkPacket> _networkPacketPool;
 
         UDPCore _udpCore;
         Dictionary<IPEndPoint, SendQueue> _sendQueue;
@@ -43,9 +46,11 @@ namespace UDPLibraryV2.Core.PacketQueueing
             _sendTimer = Stopwatch.StartNew();
 
             _sendBuffer = new byte[maximumPayloadSize];
+
+            _networkPacketPool = new ObjectPoolList<NetworkPacket>(() => new NetworkPacket());
         }
 
-        public void QueueFragment(PacketFragment fragment, SendPriority priority, IPEndPoint remote)
+        public void QueueFragment(in PacketFragment fragment, SendPriority priority, IPEndPoint remote)
         {
             lock (_sendQueue)
             {
@@ -95,7 +100,8 @@ namespace UDPLibraryV2.Core.PacketQueueing
 
         private void PrepareNextPacket(PacketFlags flags, SendQueue endPointQueue)
         {
-            NetworkPacket packet = new NetworkPacket(flags, endPointQueue.SequenceByte++, 0);
+            NetworkPacket packet = _networkPacketPool.Get();
+            packet.SetPacketHeaders(flags, endPointQueue.SequenceByte++, 0);
             int remainingSize = _maximumPayloadSize;
 
             SendPriority priority = SendPriority.High;
@@ -124,6 +130,8 @@ namespace UDPLibraryV2.Core.PacketQueueing
             } while (remainingSize > 0 && priority <= SendPriority.Low);
 
             _sendBufferSize = packet.SerializeToBuffer(_sendBuffer);
+
+            _networkPacketPool.Return(packet);
         }
     }
 }

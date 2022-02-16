@@ -168,7 +168,7 @@ namespace UDPLibraryV2.Core
             await _listener.SendAsync(bytes, amountToSend, endPoint);
         }
 
-        internal void QueueFragment(PacketFragment fragment, SendPriority priority, IPEndPoint remote)
+        internal void QueueFragment(in PacketFragment fragment, SendPriority priority, IPEndPoint remote)
         {
             _packetSender.QueueFragment(fragment, priority, remote);
         }

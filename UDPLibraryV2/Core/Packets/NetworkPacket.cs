@@ -31,7 +31,11 @@ namespace UDPLibraryV2.Core.Packets
 
         byte[] buffer = null;
 
-        internal unsafe NetworkPacket(byte[] receiveBuffer)
+        public NetworkPacket()
+        {
+        }
+
+        public unsafe NetworkPacket(byte[] receiveBuffer)
         {
             buffer = receiveBuffer;
             Size = receiveBuffer.Length;
@@ -58,6 +62,14 @@ namespace UDPLibraryV2.Core.Packets
 
         public NetworkPacket(PacketFlags packetFlags, byte packetSeq, short streamId)
         {
+            SetPacketHeaders(packetFlags, packetSeq, streamId);
+        }
+
+        public void SetPacketHeaders(PacketFlags packetFlags, byte packetSeq, short streamId)
+        {
+            if (fragments != null)
+                fragments.Clear();
+
             _packetFlags = (byte)packetFlags;
             _packetSeq = packetSeq;
             _streamId = streamId;

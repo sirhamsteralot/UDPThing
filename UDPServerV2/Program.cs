@@ -59,9 +59,7 @@ namespace UDPServerV2
 
                 //core.QueueSerializable(serializable, false, SendPriority.Medium, remoteEP);
 
-                bool result = await core.SendSerializableReliable(serializable, false, remoteEP, 3, 2500);
-
-                Console.WriteLine($"Sent?: {result}");
+                core.SendSerializableReliable(serializable, false, remoteEP, 3, 2500).ContinueWith(x => Console.WriteLine($"Sent?: {x.Result}"));
             }
         }
 

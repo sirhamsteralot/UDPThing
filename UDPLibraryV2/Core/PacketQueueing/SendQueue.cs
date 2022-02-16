@@ -31,7 +31,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
             _sendQueue.Add(SendPriority.Low, lowQueue);
         }
 
-        public void Queue(PacketFragment fragment, SendPriority priority)
+        public void Queue(in PacketFragment fragment, SendPriority priority)
         {
             _sendQueue[priority].Enqueue(fragment);
             Count++;

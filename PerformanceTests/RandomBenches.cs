@@ -9,6 +9,9 @@ using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.Core;
 using System.Net;
 using System.Buffers;
+using UDPLibraryV2.Core.PacketQueueing;
+using UDPLibraryV2.Utils;
+using System.Security.Cryptography;
 
 namespace PerformanceTests
 {
@@ -20,8 +23,16 @@ namespace PerformanceTests
         public RandomSerializable toSerialize = new RandomSerializable(128);
         public IPEndPoint remote = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
 
+        ObjectPool<NetworkPacket> _networkPacketPool;
+        ObjectPoolList<NetworkPacket> _networkPacketPoolList;
+
         public RandomBenches()
         {
+            _networkPacketPool = new ObjectPool<NetworkPacket>(() => new NetworkPacket(), 3);
+            _networkPacketPoolList = new ObjectPoolList<NetworkPacket>(() => new NetworkPacket(), 3);
+
+            //minor warmup
+
             var array1 = ArrayPool<byte>.Shared.Rent(512);
             var array2 = ArrayPool<byte>.Shared.Rent(512);
             var array3 = ArrayPool<byte>.Shared.Rent(512);
@@ -30,7 +41,6 @@ namespace PerformanceTests
             ArrayPool<byte>.Shared.Return(array2);
             ArrayPool<byte>.Shared.Return(array3);
         }
-
 
         [Benchmark]
         public void StopwatchBench()
@@ -52,6 +62,24 @@ namespace PerformanceTests
         public void CheckPacketAllocation()
         {
             NetworkPacket packet = new NetworkPacket(0, 2, 0);
+        }
+
+        [Benchmark]
+        public void CheckPacketPool()
+        {
+            NetworkPacket packet = _networkPacketPool.Get();
+            packet.SetPacketHeaders(0, 2, 0);
+
+            _networkPacketPool.Return(packet);
+        }
+
+        [Benchmark]
+        public void CheckPacketPoolList()
+        {
+            NetworkPacket packet = _networkPacketPoolList.Get();
+            packet.SetPacketHeaders(0, 2, 0);
+
+            _networkPacketPoolList.Return(packet);
         }
 
         [Benchmark]
