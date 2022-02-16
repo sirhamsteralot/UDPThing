@@ -74,9 +74,6 @@ namespace UDPServerV2
             Console.WriteLine($"{BitConverter.ToString(packet.GetPayloadBytes())}");
 
             Console.WriteLine("=======================================================");
-
-            if (!AMCLIENT)
-                core.QueueSerializable(new RandomSerializable(32), false, SendPriority.Medium, source);
         }
     }
 }
