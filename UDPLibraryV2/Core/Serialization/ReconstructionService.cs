@@ -82,7 +82,7 @@ namespace UDPLibraryV2.Core.Serialization
             byte[] output = new byte[bytesWritten];
             Buffer.BlockCopy(outputBuffer, 0, output, 0, bytesWritten);
 
-            ArrayPool<byte>.Shared.Return(output);
+            ArrayPool<byte>.Shared.Return(outputBuffer);
 
             return output;
         }
