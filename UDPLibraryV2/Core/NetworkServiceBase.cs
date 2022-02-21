@@ -8,7 +8,7 @@ using UDPLibraryV2.Core.Packets;
 
 namespace UDPLibraryV2.Core
 {
-    internal abstract class NetworkServiceBase : INetworkService
+    public abstract class NetworkServiceBase : INetworkService
     {
         UDPCore _core;
 

@@ -56,8 +56,9 @@ namespace UDPLibraryV2.Core.Packets
             }
 
             FragmentPayloadSize = FragmentSize - headerSize;
+            FragmentBufferLocation += headerSize;
 
-            _payload = new ArraySegment<byte>(receiveBuffer, headerSize, FragmentPayloadSize);
+            _payload = new ArraySegment<byte>(receiveBuffer, startPos + headerSize, FragmentPayloadSize);
         }
 
         public PacketFragment(ArraySegment<byte> payload, short typeId, short fragmentId, int frameCount, int frameIndex, bool compression) : this(payload, typeId, compression)

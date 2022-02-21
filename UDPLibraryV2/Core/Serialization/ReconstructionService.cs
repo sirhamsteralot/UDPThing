@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
 using MessagePack;
+using K4os.Compression.LZ4;
+using System.Buffers;
 
 namespace UDPLibraryV2.Core.Serialization
 {
@@ -32,8 +34,16 @@ namespace UDPLibraryV2.Core.Serialization
                 if ((fragment.HeaderFlags & FragmentFlags.Fragmented) != FragmentFlags.Fragmented)
                 {
                     byte[] payloadBytes = new byte[fragment.FragmentSize];
-                    Buffer.BlockCopy(incomingPacket.Buffer, currentLocation, payloadBytes, 0, payloadBytes.Length);
-                    OnPayloadReconstructed?.Invoke(new ReconstructedPacket(payloadBytes, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid), sourceEndPoint);
+                    byte[] dataBytes = payloadBytes;
+
+                    Buffer.BlockCopy(incomingPacket.Buffer, fragment.FragmentBufferLocation, payloadBytes, 0, payloadBytes.Length);
+
+                    if ((fragment.HeaderFlags & FragmentFlags.Compressed) == FragmentFlags.Compressed)
+                    {
+                        dataBytes = Decompress(payloadBytes);
+                    }
+
+                    OnPayloadReconstructed?.Invoke(new ReconstructedPacket(dataBytes, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid), sourceEndPoint);
                     continue;
                 }
 
@@ -44,13 +54,37 @@ namespace UDPLibraryV2.Core.Serialization
                     _fragmentedFragments[fragment.FragmentId] = completePacket;
                 }
 
-                var segment = new ArraySegment<byte>(incomingPacket.Buffer, fragment.FragmentBufferLocation, fragment.FragmentSize);
+                var segment = new ArraySegment<byte>(incomingPacket.Buffer, fragment.FragmentBufferLocation, fragment.FragmentPayloadSize);
                 if (completePacket.AddSegment(segment, fragment.FrameIndex))
                 {
-                    var payloadBytes = completePacket.GetPayloadBytes();
+                    if ((completePacket.Flags & FragmentFlags.Compressed) == FragmentFlags.Compressed)
+                    {
+                        var payloadBytes = completePacket.GetPayloadBytes();
+
+                        var decompressedBytes = Decompress(payloadBytes);
+                        var decompressed = new ReconstructedPacket(payloadBytes, completePacket.Flags, completePacket.TypeId, incomingPacket.Streamid);
+
+                        OnPayloadReconstructed?.Invoke(decompressed, sourceEndPoint);
+                        return;
+                    }
+
                     OnPayloadReconstructed?.Invoke(completePacket, sourceEndPoint);
                 }
             }
+        }
+
+        private byte[] Decompress(byte[] toDecompress)
+        {
+            byte[] outputBuffer = ArrayPool<byte>.Shared.Rent(toDecompress.Length * 255);
+
+            int bytesWritten = LZ4Codec.Decode(toDecompress, outputBuffer);
+
+            byte[] output = new byte[bytesWritten];
+            Buffer.BlockCopy(outputBuffer, 0, output, 0, bytesWritten);
+
+            ArrayPool<byte>.Shared.Return(output);
+
+            return output;
         }
     }
 }

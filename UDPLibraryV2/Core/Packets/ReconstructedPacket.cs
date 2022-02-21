@@ -19,12 +19,12 @@ namespace UDPLibraryV2.Core.Packets
 
         byte[] payload;
 
-        public ReconstructedPacket(int totalSize, FragmentFlags flags, short typeId, short streamId)
+        public ReconstructedPacket(int frameCount, FragmentFlags flags, short typeId, short streamId)
         {
             StreamId = streamId;
             Flags = flags;
             TypeId = typeId;
-            totalPacketData = new ArraySegment<byte>[totalSize];
+            totalPacketData = new ArraySegment<byte>[frameCount];
         }
 
         public ReconstructedPacket(byte[] payload, FragmentFlags flags, short typeId, short streamId)
