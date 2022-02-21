@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Serialization;
+using UDPLibraryV2.Stats;
 
 namespace UDPLibraryV2.Core.Packets
 {
@@ -23,14 +24,14 @@ namespace UDPLibraryV2.Core.Packets
             _maximumPayloadSize = maximumPayloadSize;
         }
 
-        public async Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay)
+        public async Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay, InternalStreamTracker streamTracker = null)
         {
             byte[] serializationBuffer = ArrayPool<byte>.Shared.Rent(serializable.MinimumBufferSize);
             byte[] sendBuffer = ArrayPool<byte>.Shared.Rent(_maximumPayloadSize);
 
             serializable.Serialize(serializationBuffer, 0);
 
-            var fragments = _deconstructionService.CreateFragments(serializationBuffer, serializable.TypeId, compression);
+            var fragments = _deconstructionService.CreateFragments(serializationBuffer, serializable.TypeId, compression, streamTracker);
 
             short streamId = (short)Random.Shared.Next();
 
@@ -49,7 +50,6 @@ namespace UDPLibraryV2.Core.Packets
                         {
                             completed.TrySetResult(true);
                             tokenSource.Cancel();
-
                         }
                     }
                 }
@@ -65,9 +65,13 @@ namespace UDPLibraryV2.Core.Packets
 
                 await _core.SendPacketAsync(packet, remote, sendBuffer);
 
+                streamTracker.EndFragment(fragment);
+
                 sentPackets.Add(packet.Seq, packet);
                 seq++;
             }
+
+            streamTracker?.End();
 
             while (retries-- > 0 && !completed.Task.IsCompleted)
             {

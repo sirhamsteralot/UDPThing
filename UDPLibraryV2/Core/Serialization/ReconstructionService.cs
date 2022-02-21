@@ -33,10 +33,10 @@ namespace UDPLibraryV2.Core.Serialization
             {
                 if ((fragment.HeaderFlags & FragmentFlags.Fragmented) != FragmentFlags.Fragmented)
                 {
-                    byte[] payloadBytes = new byte[fragment.FragmentSize];
+                    byte[] payloadBytes = new byte[fragment.FragmentPayloadSize];
                     byte[] dataBytes = payloadBytes;
 
-                    Buffer.BlockCopy(incomingPacket.Buffer, fragment.FragmentBufferLocation, payloadBytes, 0, payloadBytes.Length);
+                    Buffer.BlockCopy(incomingPacket.Buffer, fragment.FragmentBufferLocation, payloadBytes, 0, fragment.FragmentPayloadSize);
 
                     if ((fragment.HeaderFlags & FragmentFlags.Compressed) == FragmentFlags.Compressed)
                     {
@@ -62,7 +62,7 @@ namespace UDPLibraryV2.Core.Serialization
                         var payloadBytes = completePacket.GetPayloadBytes();
 
                         var decompressedBytes = Decompress(payloadBytes);
-                        var decompressed = new ReconstructedPacket(payloadBytes, completePacket.Flags, completePacket.TypeId, incomingPacket.Streamid);
+                        var decompressed = new ReconstructedPacket(decompressedBytes, completePacket.Flags, completePacket.TypeId, incomingPacket.Streamid);
 
                         OnPayloadReconstructed?.Invoke(decompressed, sourceEndPoint);
                         return;

@@ -24,7 +24,7 @@ namespace UDPServerV2
 
             bytes = new byte[bufferSize];
 
-            RandomNumberGenerator.Fill(bytes);
+            RandomNumberGenerator.Fill(new Span<byte>(bytes).Slice(0, bytes.Length - bytes.Length / 8));
         }
 
         public void Deserialize(byte[] buffer, int start)

@@ -54,7 +54,7 @@ namespace UDPServerV2
                 Console.WriteLine("Send packet?");
                 Console.ReadLine();
 
-                var serializable = new RandomSerializable(512);
+                var serializable = new RandomSerializable(short.MaxValue);
                 Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
                 //core.QueueSerializable(serializable, false, SendPriority.Medium, remoteEP);

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
+using UDPLibraryV2.Stats;
 
 namespace UDPLibraryV2.Core.Serialization
 {
@@ -18,7 +19,7 @@ namespace UDPLibraryV2.Core.Serialization
             _maximumFragmentSize = maximumFragmentSize;
         }
 
-        public IEnumerable<PacketFragment> CreateFragments(byte[] payload, short typeId, bool compression)
+        public IEnumerable<PacketFragment> CreateFragments(byte[] payload, short typeId, bool compression, InternalStreamTracker streamTracker = null)
         {
             int bytesLeft = payload.Length;
             byte[] sendBytes = payload;
@@ -26,14 +27,23 @@ namespace UDPLibraryV2.Core.Serialization
             if (compression)
             {
                 bytesLeft = Compress(payload, out sendBytes);
+                
             }
 
             int messageLength = bytesLeft;
+
+            if (streamTracker != null)
+            {
+                streamTracker.PayloadSize = payload.Length;
+                streamTracker.CompressedSize = messageLength;
+            }
 
             if ((bytesLeft + PacketFragment.TYPEHEADERSIZE + PacketFragment.COREHEADERSIZE) <= _maximumFragmentSize)
             {
                 var slice = new ArraySegment<byte>(sendBytes, messageLength - bytesLeft, messageLength);
                 var fragment = new PacketFragment(slice, typeId, compression);
+
+                streamTracker?.AddFragment(fragment);
 
                 yield return fragment;
                 yield break;
@@ -49,6 +59,8 @@ namespace UDPLibraryV2.Core.Serialization
             {
                 var slice = new ArraySegment<byte>(sendBytes, messageLength - bytesLeft, Math.Min(bytesLeft, maxFragmentedPayloadSize));
                 var fragment = new PacketFragment(slice, typeId, fragmentId, frameCount, frameIndex, compression);
+
+                streamTracker?.AddFragment(fragment);
 
                 frameIndex++;
                 bytesLeft -= maxFragmentedPayloadSize;

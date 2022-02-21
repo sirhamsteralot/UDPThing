@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using UDPLibraryV2.Core.PacketQueueing;
 using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.Core.Serialization;
+using UDPLibraryV2.Stats;
 
 namespace UDPLibraryV2.Core
 {
@@ -77,7 +78,9 @@ namespace UDPLibraryV2.Core
 
         public Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay)
         {
-            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay);
+            InternalStreamTracker messageTracker = StatTracker.Instance.CreateNewMessageTracker();
+
+            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay, messageTracker);
         }
 
         internal void RegisterService(INetworkService service)
