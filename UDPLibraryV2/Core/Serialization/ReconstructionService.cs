@@ -50,9 +50,13 @@ namespace UDPLibraryV2.Core.Serialization
                 ReconstructedPacket completePacket;
                 if (!_fragmentedFragments.TryGetValue(fragment.FragmentId, out completePacket))
                 {
-                    completePacket = new ReconstructedPacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid);
-                    _fragmentedFragments[fragment.FragmentId] = completePacket;
+                    lock (_fragmentedFragments)
+                    {
+                        completePacket = new ReconstructedPacket(fragment.FrameCount, fragment.HeaderFlags, fragment.TypeId, incomingPacket.Streamid);
+                        _fragmentedFragments[fragment.FragmentId] = completePacket;
+                    }
                 }
+
 
                 var segment = new ArraySegment<byte>(incomingPacket.Buffer, fragment.FragmentBufferLocation, fragment.FragmentPayloadSize);
                 if (completePacket.AddSegment(segment, fragment.FrameIndex))

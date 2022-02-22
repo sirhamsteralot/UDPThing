@@ -65,6 +65,7 @@ namespace UDPLibraryV2.Core
 
         public void QueueSerializable(INetworkSerializable serializable, bool compression, SendPriority priority, IPEndPoint remote)
         {
+
             byte[] serializationBuffer = new byte[serializable.MinimumBufferSize];
 
             serializable.Serialize(serializationBuffer, 0);
