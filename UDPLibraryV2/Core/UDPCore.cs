@@ -18,6 +18,8 @@ namespace UDPLibraryV2.Core
         public event Action<ReconstructedPacket, IPEndPoint?> OnPayloadReceivedEvent;
         public event Action<NetworkPacket, IPEndPoint?> OnMessageReceivedRaw;
 
+        public long TotalPackagesSent { get; private set; }
+
         public readonly int _maximumPayloadSize;
 
         private bool _receive;
@@ -103,6 +105,7 @@ namespace UDPLibraryV2.Core
         internal async Task SendBytesAsync(byte[] bytes, int amountToSend, IPEndPoint endPoint)
         {
             await _listener.SendAsync(bytes, amountToSend, endPoint);
+            TotalPackagesSent++;
         }
 
         internal void QueueFragment(in PacketFragment fragment, SendPriority priority, IPEndPoint remote)

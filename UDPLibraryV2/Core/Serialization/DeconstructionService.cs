@@ -71,9 +71,9 @@ namespace UDPLibraryV2.Core.Serialization
 
         private int Compress(byte[] toCompress, out byte[] targetArray)
         {
-            targetArray = new byte[LZ4Codec.MaximumOutputSize(toCompress.Length)];
+            targetArray = LZ4Pickler.Pickle(toCompress, LZ4Level.L00_FAST);
 
-            return LZ4Codec.Encode(toCompress, targetArray, LZ4Level.L00_FAST);
+            return targetArray.Length;
         }
     }
 }

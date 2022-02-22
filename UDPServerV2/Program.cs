@@ -54,12 +54,16 @@ namespace UDPServerV2
                 Console.WriteLine("Send packet?");
                 Console.ReadLine();
 
-                var serializable = new RandomSerializable(short.MaxValue);
+                var serializable = new RandomSerializable(16);
                 Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
-                //core.QueueSerializable(serializable, true, SendPriority.Medium, remoteEP);
+                for (int i = 0; i < 1000; i++)
+                    core.QueueSerializable(serializable, true, SendPriority.Medium, remoteEP);
 
-                _ = core.SendSerializableReliable(serializable, true, remoteEP, 3, 2500).ContinueWith(x => Console.WriteLine($"Sent?: {x.Result}"));
+                Console.ReadLine();
+                Console.WriteLine("packages sent: " + core.TotalPackagesSent);
+
+                //_ = core.SendSerializableReliable(serializable, true, remoteEP, 3, 2500).ContinueWith(x => Console.WriteLine($"Sent?: {x.Result}"));
             }
         }
 

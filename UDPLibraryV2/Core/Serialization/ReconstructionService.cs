@@ -79,16 +79,9 @@ namespace UDPLibraryV2.Core.Serialization
 
         private byte[] Decompress(byte[] toDecompress)
         {
-            byte[] outputBuffer = ArrayPool<byte>.Shared.Rent(toDecompress.Length * 255);
+            byte[] outputBuffer = LZ4Pickler.Unpickle(toDecompress);
 
-            int bytesWritten = LZ4Codec.Decode(toDecompress, outputBuffer);
-
-            byte[] output = new byte[bytesWritten];
-            Buffer.BlockCopy(outputBuffer, 0, output, 0, bytesWritten);
-
-            ArrayPool<byte>.Shared.Return(outputBuffer);
-
-            return output;
+            return outputBuffer;
         }
     }
 }
