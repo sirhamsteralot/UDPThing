@@ -18,7 +18,7 @@ namespace UDPLibraryV2.Core.Serialization
             var hashed = md5HashingProvider.ComputeHash(Encoding.UTF8.GetBytes(type.FullName));
 
             short typeId = (short)((hashed[0] << 8) | hashed[1]);
-            types.TryAdd(typeId, type);
+            types.Add(typeId, type);
 
             return typeId;
         }
