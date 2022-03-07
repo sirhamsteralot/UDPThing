@@ -86,7 +86,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
             }
         }
 
-        private void SendTick()
+        private async void SendTick()
         {
             foreach (var keyvaluepair in _sendQueue)
             {
@@ -94,7 +94,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
                     continue;
 
                 PrepareNextPacket(0, keyvaluepair.Value);
-                _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Key);
+                await _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Key);
             }
         }
 

@@ -111,7 +111,7 @@ namespace UDPLibraryV2.Core
             _services.Add(service);
         }
 
-        internal async Task SendPacketAsync(NetworkPacket packet, IPEndPoint remote, byte[] sendBuffer = null)
+        internal async ValueTask SendPacketAsync(NetworkPacket packet, IPEndPoint remote, byte[] sendBuffer = null)
         {
             try
             {
@@ -125,18 +125,20 @@ namespace UDPLibraryV2.Core
             } catch (Exception ex)
             {
                 Console.WriteLine(ex);
+                throw;
             }
         }
 
-        internal async Task SendBytesAsync(byte[] bytes, int amountToSend, IPEndPoint endPoint)
+        internal Task<int> SendBytesAsync(byte[] bytes, int amountToSend, IPEndPoint endPoint)
         {
             try
             {
-                await _listener.SendAsync(bytes, amountToSend, endPoint);
                 TotalPackagesSent++;
+                return _listener.SendAsync(bytes, amountToSend, endPoint);
             } catch (Exception ex)
             {
                 Console.WriteLine(ex);
+                throw;
             }
         }
 
