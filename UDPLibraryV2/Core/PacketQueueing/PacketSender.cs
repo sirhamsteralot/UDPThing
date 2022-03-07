@@ -94,7 +94,7 @@ namespace UDPLibraryV2.Core.PacketQueueing
                     continue;
 
                 PrepareNextPacket(0, keyvaluepair.Value);
-                _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Key).ContinueWith(x => throw x.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                _udpCore.SendBytesAsync(_sendBuffer, _sendBufferSize, keyvaluepair.Key);
             }
         }
 

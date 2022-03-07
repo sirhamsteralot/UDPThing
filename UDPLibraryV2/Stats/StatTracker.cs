@@ -8,7 +8,7 @@ namespace UDPLibraryV2.Stats
 {
     public class StatTracker
     {
-        public static StatTracker Instance { get; set; } = new StatTracker(x => Console.WriteLine(x.ToString()));
+        public static StatTracker Instance { get; set; } = null;
 
         Action<InternalStreamTracker> _streamCallback;
 

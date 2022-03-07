@@ -6,6 +6,7 @@ using UDPLibraryV2.Core;
 using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.Core.PacketQueueing;
 using UDPLibraryV2.Core.Serialization;
+using UDPLibraryV2.Stats;
 
 namespace UDPServerV2
 {
@@ -13,6 +14,14 @@ namespace UDPServerV2
     {
         static UDPCore core;
         static bool AMCLIENT;
+
+        struct StructWithSomeData
+        {
+            public int value1;
+            public int value2;
+            public double value3;
+            public bool value4;
+        }
 
         static async Task Main(string[] args)
         {
@@ -49,16 +58,31 @@ namespace UDPServerV2
 
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
 
+            StatTracker.Instance = new StatTracker((x) => Console.WriteLine(x.ToString()));
+
             while (true)
             {
                 Console.WriteLine("Send packet?");
                 Console.ReadLine();
 
                 var serializable = new RandomSerializable(16);
-                Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
+                //Console.WriteLine($"sending...\n{BitConverter.ToString(serializable.bytes)}");
 
-                for (int i = 0; i < 1000; i++)
-                    core.QueueSerializable(serializable, true, SendPriority.Medium, remoteEP);
+                //for (int i = 0; i < 1000; i++)
+                //    core.QueueSerializable(serializable, true, SendPriority.Medium, remoteEP);
+
+                StructWithSomeData dataStruct = new StructWithSomeData() {
+                    value1 = 1,
+                    value2 = 2,
+                    value3 = 3,
+                    value4 = true,
+                };
+
+                byte[] data = new byte[17];
+                ValueSerializer.NetworkValueSerialize(dataStruct, data, 0);
+                Console.WriteLine($"sending...\n{BitConverter.ToString(data)}");
+
+                core.QueueUnmanaged(dataStruct, false, SendPriority.Medium, remoteEP);
 
                 Console.ReadLine();
                 Console.WriteLine("packages sent: " + core.TotalPackagesSent);

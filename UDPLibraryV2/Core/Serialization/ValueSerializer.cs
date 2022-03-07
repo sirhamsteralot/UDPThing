@@ -8,10 +8,10 @@ using System.Security.Cryptography;
 
 namespace UDPLibraryV2.Core.Serialization
 {
-    public static class ValueTypeSerializer
+    public static class ValueSerializer
     {
 
-        public static unsafe void NetworkValueSerialize<T>(T typeToSerialize, byte[] outputBuffer, int offset) where T : struct
+        public static unsafe void NetworkValueSerialize<T>(T typeToSerialize, byte[] outputBuffer, int offset) where T : unmanaged
         {
             fixed (byte* ptr = &outputBuffer[offset])
             {
@@ -21,7 +21,7 @@ namespace UDPLibraryV2.Core.Serialization
             }
         }
 
-        public static unsafe T NetworkValueDeSerialize<T>(byte[] inputBuffer, int offset) where T : struct
+        public static unsafe T NetworkValueDeSerialize<T>(byte[] inputBuffer, int offset) where T : unmanaged
         {
             fixed (byte* ptr = &inputBuffer[offset])
             {

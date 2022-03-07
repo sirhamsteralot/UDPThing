@@ -43,63 +43,9 @@ namespace PerformanceTests
         }
 
         [Benchmark]
-        public void StopwatchBench()
-        {
-            _stopWatch = Stopwatch.StartNew();
-
-            long elapsedMs = _stopWatch.ElapsedMilliseconds;
-        }
-
-        [Benchmark]
-        public void TimeStampBench()
-        {
-            timeStamp = _stopWatch.ElapsedMilliseconds;
-
-            long elapsedMs = _stopWatch.ElapsedMilliseconds - timeStamp;
-        }
-
-        [Benchmark]
-        public void CheckPacketAllocation()
-        {
-            NetworkPacket packet = new NetworkPacket(0, 2, 0);
-        }
-
-        [Benchmark]
-        public void CheckPacketPool()
-        {
-            NetworkPacket packet = _networkPacketPool.Get();
-            packet.SetPacketHeaders(0, 2, 0);
-
-            _networkPacketPool.Return(packet);
-        }
-
-        [Benchmark]
-        public void CheckPacketPoolList()
-        {
-            NetworkPacket packet = _networkPacketPoolList.Get();
-            packet.SetPacketHeaders(0, 2, 0);
-
-            _networkPacketPoolList.Return(packet);
-        }
-
-        [Benchmark]
         public void CheckSendingReliableAllocation()
         {
             _ = core.SendSerializableReliable(toSerialize, false, remote, 0, 1).GetAwaiter().GetResult();
-        }
-
-        [Benchmark]
-        public void ArrayPoolCheck()
-        {
-            byte[] array = ArrayPool<byte>.Shared.Rent(512);
-
-            ArrayPool<byte>.Shared.Return(array);
-        }
-
-        [Benchmark]
-        public void ArrayAllocCheck()
-        {
-            byte[] array = new byte[512];
         }
     }
 }

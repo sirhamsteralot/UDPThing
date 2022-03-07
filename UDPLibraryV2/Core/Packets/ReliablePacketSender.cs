@@ -65,7 +65,7 @@ namespace UDPLibraryV2.Core.Packets
 
                 await _core.SendPacketAsync(packet, remote, sendBuffer);
 
-                streamTracker.EndFragment(fragment);
+                streamTracker?.EndFragment(fragment);
 
                 sentPackets.Add(packet.Seq, packet);
                 seq++;

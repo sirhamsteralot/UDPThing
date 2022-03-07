@@ -65,25 +65,38 @@ namespace UDPLibraryV2.Core
             _packetSender.StartSending();
         }
 
+        public unsafe void QueueUnmanaged<T>(T value, bool compression, SendPriority priority, IPEndPoint remote) where T: unmanaged
+        {
+            byte[] serializationBuffer = new byte[sizeof(T)];
+
+            ValueSerializer.NetworkValueSerialize(value, serializationBuffer, 0);
+
+            QueueBytes(serializationBuffer, TypeProvider.CreateTypeId(typeof(T)), compression, priority, remote);
+        }
+
         public void QueueSerializable(INetworkSerializable serializable, bool compression, SendPriority priority, IPEndPoint remote)
         {
-
             byte[] serializationBuffer = new byte[serializable.MinimumBufferSize];
 
             serializable.Serialize(serializationBuffer, 0);
 
-            var fragments = _deconstructionService.CreateFragments(serializationBuffer, serializable.TypeId, compression);
-            foreach (var fragment in fragments)
-            {
-                QueueFragment(fragment, priority, remote);
-            }
+            QueueBytes(serializationBuffer, serializable.TypeId, compression, priority, remote);
         }
 
         public Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay)
         {
-            InternalStreamTracker messageTracker = StatTracker.Instance.CreateNewMessageTracker();
+            InternalStreamTracker messageTracker = StatTracker.Instance?.CreateNewMessageTracker();
 
-            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay, messageTracker);
+            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay, null);
+        }
+
+        public void QueueBytes(byte[] bytes, short typeId, bool compression, SendPriority priority, IPEndPoint remote)
+        {
+            var fragments = _deconstructionService.CreateFragments(bytes, typeId, compression);
+            foreach (var fragment in fragments)
+            {
+                QueueFragment(fragment, priority, remote);
+            }
         }
 
         internal void RegisterService(INetworkService service)
@@ -93,19 +106,31 @@ namespace UDPLibraryV2.Core
 
         internal async Task SendPacketAsync(NetworkPacket packet, IPEndPoint remote, byte[] sendBuffer = null)
         {
-            if (sendBuffer == null)
-                sendBuffer = ArrayPool<byte>.Shared.Rent(_maximumPayloadSize);
+            try
+            {
+                if (sendBuffer == null)
+                    sendBuffer = ArrayPool<byte>.Shared.Rent(_maximumPayloadSize);
 
-            int bytesSerialized = packet.SerializeToBuffer(sendBuffer);
-            await SendBytesAsync(sendBuffer, bytesSerialized, remote);
+                int bytesSerialized = packet.SerializeToBuffer(sendBuffer);
+                await SendBytesAsync(sendBuffer, bytesSerialized, remote);
 
-            ArrayPool<byte>.Shared.Return(sendBuffer);
+                ArrayPool<byte>.Shared.Return(sendBuffer);
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         internal async Task SendBytesAsync(byte[] bytes, int amountToSend, IPEndPoint endPoint)
         {
-            await _listener.SendAsync(bytes, amountToSend, endPoint);
-            TotalPackagesSent++;
+            try
+            {
+                await _listener.SendAsync(bytes, amountToSend, endPoint);
+                TotalPackagesSent++;
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         internal void QueueFragment(in PacketFragment fragment, SendPriority priority, IPEndPoint remote)
@@ -132,7 +157,7 @@ namespace UDPLibraryV2.Core
             {
                 NetworkPacket ackPacket = new NetworkPacket(PacketFlags.Acknowledge, packet.Seq, packet.Streamid);
 
-                SendPacketAsync(ackPacket, EP).ContinueWith(x => throw x.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                SendPacketAsync(ackPacket, EP);
             }
 
             foreach (var service in _services)
