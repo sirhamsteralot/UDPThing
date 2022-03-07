@@ -65,13 +65,13 @@ namespace UDPLibraryV2.Core
             _packetSender.StartSending();
         }
 
-        public unsafe void QueueUnmanaged<T>(T value, bool compression, SendPriority priority, IPEndPoint remote) where T: unmanaged
+        public unsafe void QueueUnmanaged<T>(T value, short typeId, bool compression, SendPriority priority, IPEndPoint remote) where T: unmanaged
         {
             byte[] serializationBuffer = new byte[sizeof(T)];
 
             ValueSerializer.NetworkValueSerialize(value, serializationBuffer, 0);
 
-            QueueBytes(serializationBuffer, TypeProvider.CreateTypeId(typeof(T)), compression, priority, remote);
+            QueueBytes(serializationBuffer, typeId, compression, priority, remote);
         }
 
         public void QueueSerializable(INetworkSerializable serializable, bool compression, SendPriority priority, IPEndPoint remote)
@@ -83,11 +83,18 @@ namespace UDPLibraryV2.Core
             QueueBytes(serializationBuffer, serializable.TypeId, compression, priority, remote);
         }
 
+        public Task<bool> SendUnmanagedReliable<T>(T value, short typeId, bool compression, IPEndPoint remote, int retries, int retryDelay) where T: unmanaged
+        {
+            InternalStreamTracker messageTracker = StatTracker.Instance?.CreateNewMessageTracker();
+
+            return _reliablePacketSender.SendUnmanagedReliable(value, typeId, compression, remote, retries, retryDelay, messageTracker);
+        }
+
         public Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay)
         {
             InternalStreamTracker messageTracker = StatTracker.Instance?.CreateNewMessageTracker();
 
-            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay, null);
+            return _reliablePacketSender.SendSerializableReliable(serializable, compression, remote, retries, retryDelay, messageTracker);
         }
 
         public void QueueBytes(byte[] bytes, short typeId, bool compression, SendPriority priority, IPEndPoint remote)

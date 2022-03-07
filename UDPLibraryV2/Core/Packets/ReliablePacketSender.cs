@@ -24,6 +24,12 @@ namespace UDPLibraryV2.Core.Packets
             _maximumPayloadSize = maximumPayloadSize;
         }
 
+        public Task<bool> SendUnmanagedReliable<T>(T value, short typeId, bool compression, IPEndPoint remote, int retries, int retryDelay, InternalStreamTracker streamTracker = null) where T : unmanaged
+        {
+            UnmanagedSerializerWrapper<T> wrapper = new UnmanagedSerializerWrapper<T>(value, typeId);
+            return SendSerializableReliable(wrapper, compression, remote, retries, retryDelay, streamTracker);
+        }
+
         public async Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay, InternalStreamTracker streamTracker = null)
         {
             byte[] serializationBuffer = ArrayPool<byte>.Shared.Rent(serializable.MinimumBufferSize);

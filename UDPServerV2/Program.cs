@@ -21,6 +21,11 @@ namespace UDPServerV2
             public int value2;
             public double value3;
             public bool value4;
+
+            public override string ToString()
+            {
+                return $"value1: {value1}, value2: {value2}, value3: {value3}, value4: {value4}";
+            }
         }
 
         static async Task Main(string[] args)
@@ -78,13 +83,14 @@ namespace UDPServerV2
                     value4 = true,
                 };
 
-                byte[] data = new byte[17];
+                byte[] data = new byte[24];
                 ValueSerializer.NetworkValueSerialize(dataStruct, data, 0);
                 Console.WriteLine($"sending...\n{BitConverter.ToString(data)}");
 
-                core.QueueUnmanaged(dataStruct, false, SendPriority.Medium, remoteEP);
+                //core.QueueUnmanaged(dataStruct, 12, true, SendPriority.Medium, remoteEP);
+                await core.SendUnmanagedReliable(dataStruct, 12, true, remoteEP, 3, 2500).ContinueWith(x => Console.WriteLine($"Sent?: {x.Result}"));
 
-                Console.ReadLine();
+                //Console.ReadLine();
                 Console.WriteLine("packages sent: " + core.TotalPackagesSent);
 
                 //_ = core.SendSerializableReliable(serializable, true, remoteEP, 3, 2500).ContinueWith(x => Console.WriteLine($"Sent?: {x.Result}"));
@@ -97,6 +103,8 @@ namespace UDPServerV2
 
             Console.WriteLine($"Packet: sId: {BitConverter.ToString(BitConverter.GetBytes(packet.StreamId))} T: {packet.TypeId} F: {packet.Flags}");
             Console.WriteLine($"Source IP: {source.Address}:{source.Port}");
+
+            Console.WriteLine($"Contents: {ValueSerializer.NetworkValueDeSerialize<StructWithSomeData>(packet.GetPayloadBytes(), 0)}");
 
             Console.WriteLine($"===================> Full  packet <===================");
             Console.WriteLine($"{BitConverter.ToString(packet.GetPayloadBytes())}");

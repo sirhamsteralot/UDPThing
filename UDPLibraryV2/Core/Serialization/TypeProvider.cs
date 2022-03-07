@@ -13,7 +13,7 @@ namespace UDPLibraryV2.Core.Serialization
 
         private static Dictionary<short, Type> types = new Dictionary<short, Type>();
 
-        public static short CreateTypeId(Type type)
+        public static short GetTypeId(Type type)
         {
             var hashed = md5HashingProvider.ComputeHash(Encoding.UTF8.GetBytes(type.FullName));
 

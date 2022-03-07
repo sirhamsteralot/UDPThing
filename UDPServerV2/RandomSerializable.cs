@@ -10,7 +10,7 @@ namespace UDPServerV2
 {
     internal class RandomSerializable : INetworkSerializable
     {
-        private readonly static short _typeId = TypeProvider.CreateTypeId(typeof(RandomSerializable));
+        private readonly static short _typeId = 3123;
 
         public short TypeId => _typeId;
 
