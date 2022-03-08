@@ -4,15 +4,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using UDPLibraryV2.Core.Serialization;
 using UDPLibraryV2.RPC;
 
 namespace UDPServerV2.ReqRes
 {
     public class HelloWorldRequest : IRequest
     {
-        public short ResponseTypeId => 6;
+        public short ResponseTypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldResponse));
 
-        public short TypeId => 7;
+        public short TypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldRequest));
 
         public short MinimumBufferSize => 1;
 
@@ -33,7 +34,7 @@ namespace UDPServerV2.ReqRes
 
         public bool DoCompress => false;
 
-        public short TypeId => 6;
+        public short TypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldResponse));
 
         public short MinimumBufferSize => (short)Encoding.UTF8.GetByteCount(ReturnedData);
 

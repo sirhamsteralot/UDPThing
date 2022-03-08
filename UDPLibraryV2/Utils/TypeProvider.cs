@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Serialization
 {
-    public class TypeProvider
+    public static class TypeProvider
     {
         private static MD5 md5HashingProvider = MD5.Create();
 

@@ -50,7 +50,7 @@ namespace UDPServerV2
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(7, x => new HelloWorldResponse() { ReturnedData = "hello world" });
+            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest().TypeId, x => new HelloWorldResponse() { ReturnedData = "hello world" });
 
             Console.WriteLine("Ready. press any key to exit.");
             Console.ReadLine();
@@ -71,7 +71,7 @@ namespace UDPServerV2
             StatTracker.Instance = new StatTracker((x) => Console.WriteLine(x.ToString()));
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(7, x => new HelloWorldResponse() { ReturnedData = "hello world" });
+            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest().TypeId, x => new HelloWorldResponse() { ReturnedData = "hello world" });
 
             while (true)
             {
