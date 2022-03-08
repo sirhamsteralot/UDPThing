@@ -11,21 +11,18 @@ namespace UDPLibraryV2.Core.Serialization
     {
         private static MD5 md5HashingProvider = MD5.Create();
 
-        private static Dictionary<short, Type> types = new Dictionary<short, Type>();
-
-        public static short GetTypeId(Type type)
+        public static short GetShortTypeId(Type type)
         {
             var hashed = md5HashingProvider.ComputeHash(Encoding.UTF8.GetBytes(type.FullName));
 
             short typeId = (short)((hashed[0] << 8) | hashed[1]);
-            types.TryAdd(typeId, type);
 
             return typeId;
         }
 
-        public static Type GetTypeFromId(short id)
+        public static Span<byte> GetTypeHash(Type type)
         {
-            return types[id];
+            return md5HashingProvider.ComputeHash(Encoding.UTF8.GetBytes(type.FullName));
         }
     }
 }
