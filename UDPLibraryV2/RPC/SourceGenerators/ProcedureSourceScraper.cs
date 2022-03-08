@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UDPLibraryV2.RPC.Attributes;
 
 namespace UDPLibraryV2.RPC.SourceGenerators
 {
@@ -13,18 +14,19 @@ namespace UDPLibraryV2.RPC.SourceGenerators
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            AnnotatedClassReceiver syntaxReceiver = (AnnotatedClassReceiver)context.SyntaxReceiver;
+            AnnotatedMethodReceiver syntaxReceiver = (AnnotatedMethodReceiver)context.SyntaxReceiver;
 
             StringBuilder stringBuilder = new StringBuilder();
 
-            stringBuilder.AppendLine($@"
-namespace UDPLibraryV2.Utils {{
+            stringBuilder.Append($@"
+namespace UDPLibraryV2.RPC {{
     public class ProcedureResolver {{
-        public T 
+        public void RegisterProcedures(RPCService rpc) {{
 ");
 
-            foreach (ClassDeclarationSyntax userClass in syntaxReceiver.AnnotatedClasses)
+            foreach (MethodDeclarationSyntax method in syntaxReceiver.AnnotatedMethods)
             {
+                var attribute = method.AttributeLists.SelectMany(x => x.Attributes).Single(x => x.Name.ToFullString() == nameof(Procedure));
 
             }
 
@@ -34,7 +36,7 @@ namespace UDPLibraryV2.Utils {{
         public void Initialize(GeneratorInitializationContext context)
         {
             // Register a factory that can create our custom syntax receiver
-            context.RegisterForSyntaxNotifications(() => new AnnotatedClassReceiver());
+            context.RegisterForSyntaxNotifications(() => new AnnotatedMethodReceiver());
         }
     }
 }

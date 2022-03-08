@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.RPC
 {
-    internal struct Procedure
+    internal struct ProcedureRecord
     {
         public Func<IRequest, IResponse> proc;
 

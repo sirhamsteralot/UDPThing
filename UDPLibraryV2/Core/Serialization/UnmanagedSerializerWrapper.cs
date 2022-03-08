@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.Core.Serialization
 {
-    internal struct UnmanagedSerializerWrapper<T> : INetworkSerializable where T : unmanaged
+    public struct UnmanagedSerializerWrapper<T> : INetworkSerializable where T : unmanaged
     {
         public short TypeId { get; set; }
 

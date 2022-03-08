@@ -9,6 +9,7 @@ using UDPLibraryV2.Core.Serialization;
 using UDPLibraryV2.Stats;
 using UDPLibraryV2.RPC;
 using UDPServerV2.ReqRes;
+using UDPLibraryV2.RPC.Attributes;
 
 namespace UDPServerV2
 {
@@ -50,7 +51,7 @@ namespace UDPServerV2
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest().TypeId, x => new HelloWorldResponse() { ReturnedData = "hello world" });
+            rpcService.RegisterProcedures();
 
             Console.WriteLine("Ready. press any key to exit.");
             Console.ReadLine();
@@ -71,7 +72,7 @@ namespace UDPServerV2
             StatTracker.Instance = new StatTracker((x) => Console.WriteLine(x.ToString()));
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest().TypeId, x => new HelloWorldResponse() { ReturnedData = "hello world" });
+            rpcService.RegisterProcedures();
 
             while (true)
             {
@@ -107,6 +108,12 @@ namespace UDPServerV2
             }
         }
 
+        [Procedure(6, typeof(HelloWorldRequest), typeof(HelloWorldResponse))]
+        public static IResponse ProcedureCall(IRequest request)
+        {
+            return new HelloWorldResponse() { ReturnedData = "hello world" };
+        }
+
         private static void Core_OnPayloadReceivedEvent(ReconstructedPacket packet, IPEndPoint? source)
         {
             Console.WriteLine("================| Received broadcast: |================");
@@ -114,7 +121,7 @@ namespace UDPServerV2
             Console.WriteLine($"Packet: sId: {BitConverter.ToString(BitConverter.GetBytes(packet.StreamId))} T: {packet.TypeId} F: {packet.Flags}");
             Console.WriteLine($"Source IP: {source.Address}:{source.Port}");
 
-            Console.WriteLine($"Contents: {ValueSerializer.NetworkValueDeSerialize<Guid>(packet.GetPayloadBytes(), 0)}");
+            //Console.WriteLine($"Contents: {ValueSerializer.NetworkValueDeSerialize<Guid>(packet.GetPayloadBytes(), 0)}");
 
             Console.WriteLine($"===================> Full  packet <===================");
             Console.WriteLine($"{BitConverter.ToString(packet.GetPayloadBytes())}");

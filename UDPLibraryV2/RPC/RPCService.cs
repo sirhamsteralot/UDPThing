@@ -10,6 +10,7 @@ using UDPLibraryV2.Core.Packets;
 using UDPLibraryV2.RPC.Attributes;
 using UDPLibraryV2.Core.PacketQueueing;
 using System.Buffers;
+using System.Linq.Expressions;
 
 namespace UDPLibraryV2.RPC
 {
@@ -17,13 +18,13 @@ namespace UDPLibraryV2.RPC
     {
         private UDPCore _core;
 
-        private Dictionary<short, Procedure> _procedures;
+        private Dictionary<short, ProcedureRecord> _procedures;
 
         public RPCService(UDPCore core)
         {
             _core = core;
 
-            _procedures = new Dictionary<short, Procedure>();
+            _procedures = new Dictionary<short, ProcedureRecord>();
 
             _core.OnPayloadReceivedEvent += _core_OnPayloadReceivedEvent;
         }
@@ -72,7 +73,7 @@ namespace UDPLibraryV2.RPC
 
         private void _core_OnPayloadReceivedEvent(ReconstructedPacket packet, IPEndPoint? source)
         {
-            if (!_procedures.TryGetValue(packet.TypeId, out Procedure procedure))
+            if (!_procedures.TryGetValue(packet.TypeId, out ProcedureRecord procedure))
                 return;
 
             IRequest request = (IRequest)Activator.CreateInstance(procedure.requestType);
@@ -88,7 +89,7 @@ namespace UDPLibraryV2.RPC
             where ReqT : IRequest
             where ResT : IResponse
         {
-            _procedures[procedureId] = new Procedure()
+            _procedures[procedureId] = new ProcedureRecord()
             {
                 proc = procedure,
                 requestType = typeof(ReqT),
@@ -96,15 +97,22 @@ namespace UDPLibraryV2.RPC
             };
         }
 
-        private void RegisterProcedures()
+        public void RegisterProcedures()
         {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            IEnumerable<MethodInfo> selectedMethods = assemblies.SelectMany(x => x.GetTypes().SelectMany(y => y.GetMethods().Where(z => z.CustomAttributes.Any(a => a.AttributeType == typeof(Attributes.Procedure)))));
+            IEnumerable<MethodInfo> selectedMethods = assemblies.SelectMany(x => x.GetTypes().SelectMany(y => y.GetMethods(BindingFlags.Static | BindingFlags.Public).Where(z => z.CustomAttributes.Any(a => a.AttributeType == typeof(Procedure)))));
 
             foreach (var method in selectedMethods)
             {
-                
+                Procedure procedureAttribute = method.GetCustomAttribute<Procedure>();
+
+                _procedures[procedureAttribute.ProcedureId] = new ProcedureRecord()
+                {
+                    proc = (Func<IRequest, IResponse>)Delegate.CreateDelegate(typeof(Func<IRequest, IResponse>), method),
+                    requestType = procedureAttribute.RequestType,
+                    responseType = procedureAttribute.RequestType,
+                };
             }
         }
     }

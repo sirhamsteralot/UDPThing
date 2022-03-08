@@ -11,9 +11,9 @@ namespace UDPServerV2.ReqRes
 {
     public class HelloWorldRequest : IRequest
     {
-        public short ResponseTypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldResponse));
+        public short ResponseTypeId => 7;
 
-        public short TypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldRequest));
+        public short TypeId => 6;
 
         public short MinimumBufferSize => 1;
 
@@ -32,9 +32,9 @@ namespace UDPServerV2.ReqRes
     {
         public string ReturnedData;
 
-        public bool DoCompress => false;
+        public bool DoCompress => true;
 
-        public short TypeId => TypeProvider.GetShortTypeId(typeof(HelloWorldResponse));
+        public short TypeId => 7;
 
         public short MinimumBufferSize => (short)Encoding.UTF8.GetByteCount(ReturnedData);
 

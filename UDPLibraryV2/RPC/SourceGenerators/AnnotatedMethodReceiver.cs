@@ -9,20 +9,20 @@ using UDPLibraryV2.RPC.Attributes;
 
 namespace UDPLibraryV2.RPC.SourceGenerators
 {
-    internal class AnnotatedClassReceiver : ISyntaxReceiver
+    internal class AnnotatedMethodReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> AnnotatedClasses { get; private set; } = new List<ClassDeclarationSyntax>();
+        public List<MethodDeclarationSyntax> AnnotatedMethods { get; private set; } = new List<MethodDeclarationSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             // Business logic to decide what we're interested in goes here
-            if (syntaxNode is ClassDeclarationSyntax cds &&
+            if (syntaxNode is MethodDeclarationSyntax cds &&
                 cds.AttributeLists.Count > 0)
             {
                 var sysntaxAttributes = cds.AttributeLists.SelectMany(e => e.Attributes)
                     .Where(e => e.Name.NormalizeWhitespace().ToFullString() == nameof(Procedure));
 
-                AnnotatedClasses.Add(cds);
+                AnnotatedMethods.Add(cds);
             }
         }
     }
