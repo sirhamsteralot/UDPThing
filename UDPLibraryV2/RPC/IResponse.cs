@@ -9,6 +9,6 @@ namespace UDPLibraryV2.RPC
 {
     public interface IResponse : INetworkSerializable
     {
-        public bool DoCompress { get; }
+        bool DoCompress { get; }
     }
 }

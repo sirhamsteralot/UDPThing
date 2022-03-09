@@ -84,7 +84,6 @@ namespace UDPLibraryV2.RPC
             _core.QueueSerializable(response, response.DoCompress, SendPriority.Medium, source);
         }
 
-        // maybe call from generated code?
         public unsafe void RegisterProcedure<ReqT, ResT>(short procedureId, Func<IRequest, IResponse> procedure)
             where ReqT : IRequest
             where ResT : IResponse
@@ -107,12 +106,18 @@ namespace UDPLibraryV2.RPC
             {
                 Procedure procedureAttribute = method.GetCustomAttribute<Procedure>();
 
-                _procedures[procedureAttribute.ProcedureId] = new ProcedureRecord()
+                if (procedureAttribute.ProcedureId != ((IRequest)Activator.CreateInstance(procedureAttribute.RequestType)).TypeId)
+                    throw new ArgumentException($"Procedure Id does not match request type id! procedureid: {procedureAttribute.ProcedureId} requestType: {nameof(procedureAttribute.RequestType)}");
+
+                if (!_procedures.TryAdd(procedureAttribute.ProcedureId, new ProcedureRecord()
                 {
                     proc = (Func<IRequest, IResponse>)Delegate.CreateDelegate(typeof(Func<IRequest, IResponse>), method),
                     requestType = procedureAttribute.RequestType,
-                    responseType = procedureAttribute.RequestType,
-                };
+                    responseType = procedureAttribute.ResponseType,
+                }))
+                {
+                    throw new Exception($"could not add procedure {procedureAttribute.ProcedureId}... most likely the procedureID already exists.");
+                }
             }
         }
     }
