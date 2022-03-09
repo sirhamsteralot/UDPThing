@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UDPLibraryV2.RPC.Attributes;
 
 namespace UDPLibraryV2.RPC.SourceGenerators
 {
@@ -16,12 +15,8 @@ namespace UDPLibraryV2.RPC.SourceGenerators
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             // Business logic to decide what we're interested in goes here
-            if (syntaxNode is MethodDeclarationSyntax cds &&
-                cds.AttributeLists.Count > 0)
+            if (syntaxNode is MethodDeclarationSyntax cds)
             {
-                var sysntaxAttributes = cds.AttributeLists.SelectMany(e => e.Attributes)
-                    .Where(e => e.Name.NormalizeWhitespace().ToFullString() == nameof(Procedure));
-
                 AnnotatedMethods.Add(cds);
             }
         }
