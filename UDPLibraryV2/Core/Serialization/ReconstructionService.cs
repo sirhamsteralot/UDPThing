@@ -5,7 +5,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core.Packets;
-using MessagePack;
 using K4os.Compression.LZ4;
 using System.Buffers;
 

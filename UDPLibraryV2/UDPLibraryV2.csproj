@@ -9,13 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
-    <PackageReference Include="MessagePack" Version="2.3.85" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\UDPLibraryV2.SourceGenerators\UDPLibraryV2.SourceGenerators.csproj"
-						  OutputItemType="Analyzer"
-						  ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

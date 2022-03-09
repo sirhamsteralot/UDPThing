@@ -97,7 +97,7 @@ namespace UDPLibraryV2.RPC
             };
         }
 
-        public void RegisterProcedures()
+        public void FindAndRegisterProcedures()
         {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 

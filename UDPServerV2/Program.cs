@@ -51,7 +51,7 @@ namespace UDPServerV2
             core.OnPayloadReceivedEvent += Core_OnPayloadReceivedEvent;
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedures();
+            rpcService.FindAndRegisterProcedures();
 
             Console.WriteLine("Ready. press any key to exit.");
             Console.ReadLine();
@@ -72,7 +72,7 @@ namespace UDPServerV2
             StatTracker.Instance = new StatTracker((x) => Console.WriteLine(x.ToString()));
 
             RPCService rpcService = new RPCService(core);
-            rpcService.RegisterProcedures();
+            rpcService.FindAndRegisterProcedures();
 
             while (true)
             {
