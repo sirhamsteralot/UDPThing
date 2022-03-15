@@ -79,12 +79,12 @@ namespace UDPLibraryV2.RPC
             IRequest request = (IRequest)Activator.CreateInstance(procedure.requestType);
             request.Deserialize(packet.GetPayloadBytes(), 0);
 
-            IResponse response = procedure.proc.Invoke(request);
+            IResponse response = procedure.proc.Invoke(request, source);
 
             _core.QueueSerializable(response, response.DoCompress, SendPriority.Medium, source);
         }
 
-        public unsafe void RegisterProcedure<ReqT, ResT>(short procedureId, Func<IRequest, IResponse> procedure)
+        public unsafe void RegisterProcedure<ReqT, ResT>(short procedureId, Func<IRequest, IPEndPoint, IResponse> procedure)
             where ReqT : IRequest
             where ResT : IResponse
         {
@@ -111,7 +111,7 @@ namespace UDPLibraryV2.RPC
 
                 if (!_procedures.TryAdd(procedureAttribute.ProcedureId, new ProcedureRecord()
                 {
-                    proc = (Func<IRequest, IResponse>)Delegate.CreateDelegate(typeof(Func<IRequest, IResponse>), method),
+                    proc = (Func<IRequest, IPEndPoint, IResponse>)Delegate.CreateDelegate(typeof(Func<IRequest, IPEndPoint, IResponse>), method),
                     requestType = procedureAttribute.RequestType,
                     responseType = procedureAttribute.ResponseType,
                 }))

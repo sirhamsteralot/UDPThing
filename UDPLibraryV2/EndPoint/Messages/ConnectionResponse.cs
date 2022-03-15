@@ -7,23 +7,23 @@ using UDPLibraryV2.RPC;
 
 namespace UDPLibraryV2.EndPoint.Messages
 {
-    internal class ConnectionRequest : IRequest
+    internal class ConnectionResponse : IResponse
     {
-        public short ResponseTypeId => 2;
-        public short TypeId => 1;
+        public bool DoCompress => false;
 
-        public short RequiredSendBufferSize => 6;
+        public short TypeId => 2;
 
-        public short ConnectionVersion;
+        public short RequiredSendBufferSize => 5;
 
-        public Permissions RequestedPermissions;
+        public Permissions GrantedPermissions;
+        public bool ConnectionGranted;
 
         public unsafe void Deserialize(byte[] buffer, int start)
         {
             fixed (byte* ptr = &buffer[start])
             {
-                ConnectionVersion = *(short*)ptr;
-                RequestedPermissions = *(Permissions*)(ptr + 2);
+                GrantedPermissions = *(Permissions*)(ptr);
+                ConnectionGranted = *(bool*)(ptr + 4);
             }
         }
 
@@ -31,8 +31,8 @@ namespace UDPLibraryV2.EndPoint.Messages
         {
             fixed (byte* ptr = &buffer[start])
             {
-                *(short*)ptr = ConnectionVersion;
-                *(Permissions*)(ptr + 2) = RequestedPermissions;
+                *(Permissions*)(ptr) = GrantedPermissions;
+                *(bool*)(ptr + 4) = ConnectionGranted;
             }
         }
     }

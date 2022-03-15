@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace UDPLibraryV2.EndPoint
 {
-    public class RemoteEndPoint
+    [Flags]
+    public enum Permissions
     {
-        public Permissions permissions;
-        public IPEndPoint ip;
+        None = 0,
+        ConnectionVersion = 1,
+        Base = 2,
     }
 }

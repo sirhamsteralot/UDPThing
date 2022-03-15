@@ -16,7 +16,6 @@ namespace UDPServerV2
     internal class Program
     {
         static UDPCore core;
-        static bool AMCLIENT;
 
         struct StructWithSomeData
         {
@@ -34,11 +33,12 @@ namespace UDPServerV2
         static async Task Main(string[] args)
         {
             var input = Console.ReadLine();
+            var epTests = new EndpointTests();
 
             if (input == "s")
-                StartServer();
+                epTests.StartServer();
             else if (input == "c")
-                await StartClient();
+                epTests.StartClient();
         }
 
         static void StartServer()
@@ -59,8 +59,6 @@ namespace UDPServerV2
 
         static async Task StartClient()
         {
-            AMCLIENT = true;
-
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 0);
             core = new UDPCore(endPoint);
             core.StartListening();
@@ -94,8 +92,8 @@ namespace UDPServerV2
 
                 try
                 {
-                    var response = await rpcService.CallProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest(), false, remoteEP, 2500);
-                    Console.WriteLine(response.ReturnedData);
+                    //var response = await rpcService.CallProcedure<HelloWorldRequest, HelloWorldResponse>(new HelloWorldRequest(), false, remoteEP, 2500);
+                    //Console.WriteLine(response.ReturnedData);
                 } catch (TimeoutException e)
                 {
                     Console.WriteLine("Request timed out..");
@@ -109,7 +107,7 @@ namespace UDPServerV2
         }
 
         [Procedure(6, typeof(HelloWorldRequest), typeof(HelloWorldResponse))]
-        public static IResponse ProcedureCall(IRequest request)
+        public static IResponse ProcedureCall(IRequest request, IPEndPoint source)
         {
             return new HelloWorldResponse() { ReturnedData = "hello world" };
         }

@@ -32,7 +32,7 @@ namespace UDPLibraryV2.Core.Packets
 
         public async Task<bool> SendSerializableReliable(INetworkSerializable serializable, bool compression, IPEndPoint remote, int retries, int retryDelay, InternalStreamTracker streamTracker = null)
         {
-            byte[] serializationBuffer = ArrayPool<byte>.Shared.Rent(serializable.MinimumBufferSize);
+            byte[] serializationBuffer = ArrayPool<byte>.Shared.Rent(serializable.RequiredSendBufferSize);
             byte[] sendBuffer = ArrayPool<byte>.Shared.Rent(_maximumPayloadSize);
 
             serializable.Serialize(serializationBuffer, 0);
@@ -41,7 +41,7 @@ namespace UDPLibraryV2.Core.Packets
 
             short streamId = (short)Random.Shared.Next();
 
-            Dictionary<byte, NetworkPacket> sentPackets = new Dictionary<byte, NetworkPacket>(serializable.MinimumBufferSize + _maximumPayloadSize - 1 / _maximumPayloadSize);
+            Dictionary<byte, NetworkPacket> sentPackets = new Dictionary<byte, NetworkPacket>(serializable.RequiredSendBufferSize + _maximumPayloadSize - 1 / _maximumPayloadSize);
 
             TaskCompletionSource<bool> completed = new TaskCompletionSource<bool>();
             CancellationTokenSource tokenSource = new CancellationTokenSource();

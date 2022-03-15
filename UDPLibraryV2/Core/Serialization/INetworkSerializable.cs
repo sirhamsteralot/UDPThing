@@ -9,7 +9,7 @@ namespace UDPLibraryV2.Core.Serialization
     public interface INetworkSerializable
     {
         short TypeId { get; }
-        short MinimumBufferSize { get; }
+        short RequiredSendBufferSize { get; }
 
         void Serialize(byte[] buffer, int start);
 

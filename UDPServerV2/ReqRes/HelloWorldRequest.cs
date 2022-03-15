@@ -15,7 +15,7 @@ namespace UDPServerV2.ReqRes
 
         public short TypeId => 6;
 
-        public short MinimumBufferSize => 1;
+        public short RequiredSendBufferSize => 1;
 
         public void Deserialize(byte[] buffer, int start)
         {
@@ -36,7 +36,7 @@ namespace UDPServerV2.ReqRes
 
         public short TypeId => 7;
 
-        public short MinimumBufferSize => (short)Encoding.UTF8.GetByteCount(ReturnedData);
+        public short RequiredSendBufferSize => (short)Encoding.UTF8.GetByteCount(ReturnedData);
 
         public void Deserialize(byte[] buffer, int start)
         {

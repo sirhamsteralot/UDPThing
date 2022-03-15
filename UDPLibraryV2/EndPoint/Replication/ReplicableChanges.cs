@@ -13,7 +13,7 @@ namespace UDPLibraryV2.EndPoint.Replication
 
         public short TypeId { get; private set; }
 
-        public short MinimumBufferSize {get; private set; }
+        public short RequiredSendBufferSize {get; private set; }
 
         public List<INetworkSerializable> Changes { get; private set; } = new List<INetworkSerializable>();
 

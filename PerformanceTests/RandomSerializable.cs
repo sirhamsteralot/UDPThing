@@ -14,13 +14,13 @@ namespace PerformanceTests
 
         public short TypeId => TYPEID;
 
-        public short MinimumBufferSize { get; set; }
+        public short RequiredSendBufferSize { get; set; }
 
         public byte[] bytes;
 
         public RandomSerializable(short bufferSize)
         {
-            MinimumBufferSize = bufferSize;
+            RequiredSendBufferSize = bufferSize;
 
             bytes = new byte[bufferSize];
 
@@ -29,7 +29,7 @@ namespace PerformanceTests
 
         public void Deserialize(byte[] buffer, int start)
         {
-            bytes = buffer[start..MinimumBufferSize];
+            bytes = buffer[start..RequiredSendBufferSize];
         }
 
         public void Serialize(byte[] buffer, int start)

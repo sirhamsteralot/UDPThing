@@ -10,7 +10,7 @@ namespace UDPLibraryV2.Core.Serialization
     {
         public short TypeId { get; set; }
 
-        public short MinimumBufferSize { get { unsafe { return (short)sizeof(T); } } }
+        public short RequiredSendBufferSize { get { unsafe { return (short)sizeof(T); } } }
 
         public T Value { get; set; }
 
