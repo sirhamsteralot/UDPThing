@@ -18,13 +18,13 @@ namespace UDPLibraryV2.RPC
     {
         private UDPCore _core;
 
-        private Dictionary<short, ProcedureRecord> _procedures;
+        internal Dictionary<short, ProcedureRecord> procedures;
 
         public RPCService(UDPCore core)
         {
             _core = core;
 
-            _procedures = new Dictionary<short, ProcedureRecord>();
+            procedures = new Dictionary<short, ProcedureRecord>();
 
             _core.OnPayloadReceivedEvent += _core_OnPayloadReceivedEvent;
         }
@@ -73,7 +73,7 @@ namespace UDPLibraryV2.RPC
 
         private void _core_OnPayloadReceivedEvent(ReconstructedPacket packet, IPEndPoint? source)
         {
-            if (!_procedures.TryGetValue(packet.TypeId, out ProcedureRecord procedure))
+            if (!procedures.TryGetValue(packet.TypeId, out ProcedureRecord procedure))
                 return;
 
             IRequest request = (IRequest)Activator.CreateInstance(procedure.requestType);
@@ -88,7 +88,7 @@ namespace UDPLibraryV2.RPC
             where ReqT : IRequest
             where ResT : IResponse
         {
-            _procedures[procedureId] = new ProcedureRecord()
+            procedures[procedureId] = new ProcedureRecord()
             {
                 proc = procedure,
                 requestType = typeof(ReqT),
@@ -109,7 +109,7 @@ namespace UDPLibraryV2.RPC
                 if (procedureAttribute.ProcedureId != ((IRequest)Activator.CreateInstance(procedureAttribute.RequestType)).TypeId)
                     throw new ArgumentException($"Procedure Id does not match request type id! procedureid: {procedureAttribute.ProcedureId} requestType: {nameof(procedureAttribute.RequestType)}");
 
-                if (!_procedures.TryAdd(procedureAttribute.ProcedureId, new ProcedureRecord()
+                if (!procedures.TryAdd(procedureAttribute.ProcedureId, new ProcedureRecord()
                 {
                     proc = (Func<IRequest, IPEndPoint, IResponse>)Delegate.CreateDelegate(typeof(Func<IRequest, IPEndPoint, IResponse>), method),
                     requestType = procedureAttribute.RequestType,

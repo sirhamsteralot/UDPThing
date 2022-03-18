@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UDPLibraryV2.Core;
 using UDPLibraryV2.EndPoint.Messages;
+using UDPLibraryV2.EndPoint.Replication;
 using UDPLibraryV2.RPC;
 using UDPLibraryV2.RPC.Attributes;
 
@@ -22,11 +23,15 @@ namespace UDPLibraryV2.EndPoint
         private RPCService _rpcService;
         public RPCService RPCService => _rpcService;
 
+        private ReplicationService _replicationService;
+        public ReplicationService ReplicationService => _replicationService;
+
         public LocalEndPoint(IPEndPoint listenEndPoint, int sendRate = 64, int maxPayloadSize = 512)
         {
             _udpCore = new UDPCore(listenEndPoint, sendRate, maxPayloadSize);
 
             _rpcService = new RPCService(_udpCore);
+            _replicationService = new ReplicationService(_rpcService);
         }
 
         public void Start()
@@ -43,13 +48,14 @@ namespace UDPLibraryV2.EndPoint
             {
                 RequestedPermissions = Permissions.Base,
                 ConnectionVersion = version,
+                AvailableProcedures = _rpcService.procedures.Keys.ToArray(),
             };
 
             var response = await _rpcService.CallProcedure<ConnectionRequest, ConnectionResponse>(request, false, endPoint, 2500);
 
             if (response.ConnectionGranted)
             {
-                return new RemoteEndPoint();
+                return new RemoteEndPoint(response.GrantedPermissions, endPoint, new HashSet<short>(response.AvailableProcedures));
             }
 
             return null;
@@ -66,12 +72,14 @@ namespace UDPLibraryV2.EndPoint
                 {
                     GrantedPermissions = Permissions.None,
                     ConnectionGranted = false,
+                    AvailableProcedures = null,
                 };
             }
 
             return new ConnectionResponse() {
                 GrantedPermissions = connectionReq.RequestedPermissions,
                 ConnectionGranted = true,
+                AvailableProcedures = connectionReq.AvailableProcedures,
             };
         }
     }

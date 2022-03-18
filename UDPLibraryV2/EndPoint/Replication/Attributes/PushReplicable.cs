@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.EndPoint.Replication.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class Replicate : Attribute
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    public class PushReplicable : Attribute
     {
-        ReplicationMode ReplicationMode { get; set; } = ReplicationMode.Push;
-
     }
 }

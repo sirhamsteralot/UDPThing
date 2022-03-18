@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.RPC.Attributes
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class Procedure : Attribute
     {
         public Type RequestType { get; init; }

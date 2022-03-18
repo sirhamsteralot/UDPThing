@@ -12,10 +12,16 @@ namespace UDPServerV2
     {
         LocalEndPoint localEP;
 
+        short justAnIntType = 100;
+        short justAnIntInstance = 0;
+        int justAnInt = 234;
+
         public async void StartServer()
         {
             IPEndPoint listenEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
             localEP = new LocalEndPoint(listenEP);
+
+            localEP.ReplicationService.UpdateInstance<int>(justAnIntType, justAnIntInstance, justAnInt);
 
             localEP.Start();
         }
@@ -32,7 +38,9 @@ namespace UDPServerV2
 
             var ep = await localEP.Connect(remoteEP);
 
-            Console.WriteLine("finished");
+            int value = await localEP.ReplicationService.GetRemoteValue<int>(remoteEP, justAnIntType, justAnIntInstance);
+
+            Console.WriteLine($"finished: {value}");
         }
     }
 }
