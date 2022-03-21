@@ -12,7 +12,7 @@ using UDPLibraryV2.RPC.Attributes;
 
 namespace UDPLibraryV2.EndPoint
 {
-    public class LocalEndPoint
+    public partial class LocalEndPoint
     {
         public const short version = 1;
 

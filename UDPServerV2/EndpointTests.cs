@@ -21,9 +21,21 @@ namespace UDPServerV2
             IPEndPoint listenEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
             localEP = new LocalEndPoint(listenEP);
 
-            localEP.ReplicationService.UpdateInstance<int>(justAnIntType, justAnIntInstance, justAnInt);
+            localEP.ReplicationService.UpdatePushValue<int>(justAnIntType, justAnIntInstance, justAnInt);
+
+            int thing = localEP.ReplicationService.GetPushValue<int>(justAnIntType, justAnIntInstance);
+
+            Console.WriteLine(thing);
 
             localEP.Start();
+
+            int newThing = thing;
+            while (thing == newThing)
+            {
+                newThing = localEP.ReplicationService.GetPushValue<int>(justAnIntType, justAnIntInstance);
+            }
+
+            Console.WriteLine($"Value updated to {newThing}");
         }
 
         public async void StartClient()
@@ -38,9 +50,9 @@ namespace UDPServerV2
 
             var ep = await localEP.Connect(remoteEP);
 
-            int value = await localEP.ReplicationService.GetRemoteValue<int>(remoteEP, justAnIntType, justAnIntInstance);
+            bool success = await localEP.ReplicationService.Pushvalue<int>(567, justAnIntType, justAnIntInstance, remoteEP);
 
-            Console.WriteLine($"finished: {value}");
+            Console.WriteLine($"finished: {success}");
         }
     }
 }
