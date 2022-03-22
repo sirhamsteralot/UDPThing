@@ -45,6 +45,16 @@ namespace UDPServerV2
             }
         }
 
+        public Task<int> GetRandomIntThingPullValue()
+        {
+            return _endPoint.ReplicationService.RequestRemoteValue<int>(_remoteEndPoint.ip, propertyData_RandomIntThingPullValue.typeId, propertyData_RandomIntThingPullValue.instanceId);
+        }
+
+        public void SetRandomIntThingPullValue(int value)
+        {
+            _endPoint.ReplicationService.UpdatePullValue<int>(propertyData_RandomIntThingPullValue.typeId, propertyData_RandomIntThingPullValue.instanceId, value);
+        }
+
         public API_Concept()
         {
             RandomIntThingPullValue = Task.FromResult(2); // SAD :(
