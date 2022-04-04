@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UDPLibraryV2.EndPoint.Replication.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class PullReplicable : Attribute
     {
     }

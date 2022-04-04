@@ -68,7 +68,7 @@ namespace UDPLibraryV2.EndPoint.Replication
             InstanceValues[instanceId] = wrapped;
         }
 
-        public async Task<T> RequestRemoteValue<T>(IPEndPoint remote, short requestedTypeId, short instanceId) where T : unmanaged
+        public async ValueTask<T> RequestRemoteValue<T>(IPEndPoint remote, short requestedTypeId, short instanceId) where T : unmanaged
         {
             ValueRequest request = new ValueRequest(requestedTypeId, instanceId);
 
@@ -83,23 +83,25 @@ namespace UDPLibraryV2.EndPoint.Replication
             return wrapper.Value;
         }
 
-        public async Task<bool> Pushvalue<T>(T value, short typeId, short instanceId, IPEndPoint remote) where T : unmanaged
+        public async ValueTask<bool> Pushvalue<T>(T value, short typeId, short instanceId, IPEndPoint remote) where T : unmanaged
         {
-            UnmanagedSerializerWrapper<T> wrapped = new UnmanagedSerializerWrapper<T>(value, typeId);
+            try
+            {
+                UnmanagedSerializerWrapper<T> wrapped = new UnmanagedSerializerWrapper<T>(value, typeId);
+                int size = Marshal.SizeOf(value);
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
+                wrapped.Serialize(buffer, 0);
 
-            int size = Marshal.SizeOf(value);
+                ValuePushRequest request = new ValuePushRequest(instanceId, typeId, buffer);
+                ValuePushResponse response = await rpcService.CallProcedure<ValuePushRequest, ValuePushResponse>(request, false, remote, timeOutMs);
 
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
-
-            wrapped.Serialize(buffer, 0);
-
-            ValuePushRequest request = new ValuePushRequest(instanceId, typeId, buffer);
-
-            ValuePushResponse response = await rpcService.CallProcedure<ValuePushRequest, ValuePushResponse>(request, false, remote, timeOutMs);
-
-            ArrayPool<byte>.Shared.Return(buffer);
-
-            return response.successFlags == 1;
+                ArrayPool<byte>.Shared.Return(buffer);
+                return response.successFlags == 1;
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw;
+            }
         }
 
         [Procedure(3, typeof(ValueRequest), typeof(ValueResponse))]
